@@ -157,6 +157,20 @@ Done! Your app is live.
 npm run deploy
 ```
 
+### Auto-Deploy from GitHub (optional)
+
+Push to `master` = auto deploy. To enable:
+
+1. Create a Cloudflare API Token at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens):
+   - Template: **Edit Cloudflare Workers**
+   - Account Resources: your account
+   - Zone Resources: all zones
+2. Add 3 secrets to your GitHub repo (**Settings > Secrets > Actions**):
+   - `CLOUDFLARE_API_TOKEN` — the token from step 1
+   - `CLOUDFLARE_ACCOUNT_ID` — from Cloudflare Dashboard sidebar
+   - `D1_DATABASE_ID` — from `wrangler d1 list`
+3. Push code — GitHub Actions will build & deploy automatically
+
 ---
 
 <details>
