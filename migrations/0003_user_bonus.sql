@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN dkp_bonus_pct REAL NOT NULL DEFAULT 0;

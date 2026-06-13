@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	* {
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: #0f1117;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #2a2d3a;
+		border-radius: 3px;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: #3a3d4a;
+	}
+}
+
+@layer components {
+	.btn {
+		@apply px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+	}
+
+	.btn-primary {
+		@apply btn bg-rok-accent text-rok-bg hover:bg-amber-400 active:bg-amber-300;
+	}
+
+	.btn-secondary {
+		@apply btn bg-rok-surface text-rok-text border border-rok-border hover:bg-rok-card active:bg-rok-border;
+	}
+
+	.btn-danger {
+		@apply btn bg-red-600 text-white hover:bg-red-500 active:bg-red-400;
+	}
+
+	.btn-ghost {
+		@apply btn text-rok-muted hover:text-rok-text hover:bg-rok-surface;
+	}
+
+	.input {
+		@apply w-full px-3 py-2 bg-rok-surface border border-rok-border rounded-lg text-rok-text placeholder:text-rok-dim focus:outline-none focus:border-rok-accent focus:ring-1 focus:ring-rok-accent text-sm;
+	}
+
+	.card {
+		@apply bg-rok-surface border border-rok-border rounded-xl p-4;
+	}
+
+	.badge {
+		@apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+	}
+
+	.badge-gold {
+		@apply badge bg-amber-500/20 text-amber-400;
+	}
+
+	.badge-green {
+		@apply badge bg-green-500/20 text-green-400;
+	}
+
+	.badge-red {
+		@apply badge bg-red-500/20 text-red-400;
+	}
+
+	.badge-blue {
+		@apply badge bg-blue-500/20 text-blue-400;
+	}
+}

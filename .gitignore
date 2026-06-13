@@ -1,0 +1,11 @@
+node_modules/
+.svelte-kit/
+.wrangler/
+build/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+*.csv
+migrations/0001_initial.sql

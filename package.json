@@ -1,0 +1,32 @@
+{
+  "name": "rok-manager",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "wrangler pages dev .svelte-kit/cloudflare",
+    "db:migrate:local": "wrangler d1 migrations apply rok-manager-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply rok-manager-db --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260612.1",
+    "@sveltejs/adapter-cloudflare": "^5",
+    "@sveltejs/kit": "^2",
+    "@sveltejs/vite-plugin-svelte": "^5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/papaparse": "^5.5.2",
+    "autoprefixer": "^10",
+    "postcss": "^8",
+    "svelte": "^5",
+    "tailwindcss": "^3",
+    "typescript": "^5",
+    "vite": "^6",
+    "wrangler": "^3"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "papaparse": "^5.4.1"
+  },
+  "type": "module"
+}

@@ -1,0 +1,36 @@
+<script lang="ts">
+	import '../app.css';
+	import Navbar from '$lib/components/Navbar.svelte';
+	import type { Snippet } from 'svelte';
+	import { setContext } from 'svelte';
+	import { t, type Lang } from '$lib/i18n';
+	import { invalidateAll } from '$app/navigation';
+
+	interface Props {
+		data: { user: App.Locals['user']; lang: Lang };
+		children: Snippet;
+	}
+
+	let { data, children }: Props = $props();
+
+	let lang = $state<Lang>(data.lang);
+
+	$effect(() => { lang = data.lang; });
+
+	setContext('lang', () => lang);
+	setContext('t', (key: string, params?: Record<string, string | number>) => t(lang, key, params));
+
+	async function toggleLang() {
+		const newLang = lang === 'vi' ? 'en' : 'vi';
+		await fetch('/api/lang', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang: newLang }) });
+		lang = newLang;
+		await invalidateAll();
+	}
+</script>
+
+<div class="min-h-screen flex flex-col">
+	<Navbar user={data.user} {lang} {toggleLang} />
+	<main class="flex-1 max-w-5xl mx-auto w-full px-4 py-6">
+		{@render children()}
+	</main>
+</div>
