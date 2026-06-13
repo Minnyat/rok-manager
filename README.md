@@ -492,8 +492,7 @@ This project is developed and maintained for free. If you find it useful, you ca
 | **Discord** | `minnyat` |
 | **Facebook** | [fb.com/MinNyat.me](https://www.facebook.com/MinNyat.me) |
 
-- Hỗ trợ setup miễn phí / Free setup support
-- Báo lỗi hoặc góp ý? Tạo [Issue](https://github.com/Minnyat/rok-manager/issues)
+Hỗ trợ setup, báo lỗi, góp ý — liên hệ qua Discord hoặc Facebook.
 
 ---
 
