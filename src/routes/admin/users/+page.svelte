@@ -146,9 +146,7 @@
 							{:else}
 								<span class="badge bg-rok-dim/20 text-rok-dim">Pending</span>
 							{/if}
-							{#if user.dkp_bonus_pct > 0}
-								<span class="badge bg-rok-green/20 text-rok-green">+{user.dkp_bonus_pct}%</span>
-							{/if}
+
 						</div>
 						<p class="text-xs text-rok-dim mt-0.5">
 							Gov ID: {user.main_governor_id} • Created: {formatDate(user.created_at)}
@@ -156,22 +154,6 @@
 					</div>
 
 					<div class="flex gap-1 flex-shrink-0 flex-wrap items-center">
-						{#if user.role !== 'admin'}
-							<form method="POST" action="?/setBonus" use:enhance class="flex items-center gap-1">
-								<input type="hidden" name="userId" value={user.id} />
-								<input
-									type="number"
-									name="bonus"
-									value={user.dkp_bonus_pct}
-									min="0"
-									max="100"
-									step="1"
-									class="input w-16 text-xs text-center !py-1"
-								/>
-								<span class="text-xs text-rok-dim">%</span>
-								<button type="submit" class="btn-ghost text-xs text-rok-green">{t('au.setBonus')}</button>
-							</form>
-						{/if}
 						{#if !user.is_active && user.invite_token}
 							<button
 								class="btn-ghost text-xs"
