@@ -9,21 +9,27 @@
 ## Screenshots
 
 ### Login
+
 ![Login](docs/images/login.png)
 
 ### Rankings — Combined view with DKP breakdown
+
 ![Rankings](docs/images/rankings.png)
 
 ### Admin Panel — Overview with stats and farm account links
+
 ![Admin Panel](docs/images/admin-panel.png)
 
 ### User Management — Create users, set DKP bonus %, manage invites
+
 ![Admin Users](docs/images/admin-users.png)
 
 ### DKP Scoring — Configurable weights and recalculation
+
 ![Scores](docs/images/admin-scores.png)
 
 ### Farm Accounts — Players link farm accounts to main
+
 ![Accounts](docs/images/accounts.png)
 
 ---
@@ -126,6 +132,7 @@ npm run setup
 ```
 
 Script sẽ hướng dẫn bạn:
+
 - Đăng nhập Cloudflare (mở trình duyệt)
 - Nhập tên kingdom
 - Chọn mật khẩu admin
@@ -254,6 +261,7 @@ npm run setup
 ```
 
 The setup script will guide you through:
+
 - Login to Cloudflare (opens browser)
 - Enter your kingdom name
 - Choose admin password
@@ -422,6 +430,7 @@ Combined = Boosted DKP + Farm Contributions
 #### Auto-Recalculate
 
 Scores recalculate automatically when:
+
 - A user links or unlinks a farm account
 - Admin changes scoring weights
 - Admin assigns a bonus %
@@ -473,14 +482,18 @@ Numbers can use commas as thousand separators (e.g., "1,234,567").
 
 ---
 
-## Donate / Ủng hộ
+## ☕ Donate / Ủng hộ
 
-Dự án được phát triển và duy trì miễn phí. Nếu bạn thấy hữu ích, bạn có thể ủng hộ tác giả qua QR bên dưới:
+> **Dự án này hoàn toàn miễn phí!** Nếu bạn thấy hữu ích, hãy mời tác giả một ly cà phê ☕
 
-This project is developed and maintained for free. If you find it useful, you can support the author via QR below:
+> **This project is 100% free!** If you find it useful, consider buying the author a coffee ☕
 
 <p align="center">
-  <img src="docs/images/donate-qr.jpg" alt="Donate QR" width="250" />
+  <a href="docs/images/donate-qr.jpg">
+    <img src="docs/images/donate-qr.jpg" alt="Donate QR" width="300" />
+  </a>
+  <br/>
+  <b>🙏 Cảm ơn bạn đã ủng hộ! / Thank you for your support! 🙏</b>
 </p>
 
 ---
