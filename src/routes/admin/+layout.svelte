@@ -9,10 +9,8 @@
 
 	const links = [
 		{ href: '/admin', label: 'Tổng quan' },
+		{ href: '/admin/kvks', label: '⚔️ KvKs' },
 		{ href: '/admin/users', label: 'Users' },
-		{ href: '/admin/import', label: 'Import' },
-		{ href: '/admin/versions', label: 'Versions' },
-		{ href: '/admin/scores', label: 'Scores' },
 		{ href: '/admin/accounts', label: 'Accounts' },
 	];
 </script>

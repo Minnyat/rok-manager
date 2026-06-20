@@ -6,4 +6,4 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 [[d1_databases]]
 binding = "DB"
 database_name = "rok-manager-db"
-database_id = "YOUR_DATABASE_ID_HERE"
+database_id = "d3367481-7fa5-4e28-8139-d097d32c7bca"

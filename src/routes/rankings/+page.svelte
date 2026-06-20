@@ -8,6 +8,7 @@
 	interface Props {
 		data: {
 			players: any[];
+			farmStatsMap: Record<number, { t4: number; t5: number; dead_t4: number; dead_t5: number }>;
 			versionName: string | null;
 			sort: string;
 			dir: string;
@@ -15,9 +16,12 @@
 			page: number;
 			totalPages: number;
 			total: number;
+			kvk: any;
 		};
 	}
 	let { data }: Props = $props();
+
+
 
 	const isCombined = $derived(data.view === 'combined');
 
@@ -35,7 +39,9 @@
 	function buildUrl(params: Record<string, string | number>) {
 		const current = { sort: data.sort, dir: data.dir, view: data.view, page: data.page };
 		const merged = { ...current, ...params };
-		return `/rankings?sort=${merged.sort}&dir=${merged.dir}&view=${merged.view}&page=${merged.page}`;
+		let url = `/rankings?sort=${merged.sort}&dir=${merged.dir}&view=${merged.view}&page=${merged.page}`;
+		if (data.kvk?.id) url += `&kvkId=${data.kvk.id}`;
+		return url;
 	}
 
 	function sortBy(key: string) {
@@ -66,6 +72,10 @@
 		return isCombined ? p.rank_combined : p.rank_individual;
 	}
 
+	function getFarmStats(governorId: number) {
+		return data.farmStatsMap?.[governorId];
+	}
+
 	const pageNumbers = $derived.by(() => {
 		const pages: (number | '...')[] = [];
 		const total = data.totalPages;
@@ -93,9 +103,14 @@
 <div class="space-y-4">
 	<div class="flex items-center justify-between">
 		<h1 class="text-xl font-bold">{t('rank.title')}</h1>
-		{#if data.versionName}
-			<span class="badge-gold text-xs">{data.versionName}</span>
-		{/if}
+		<div class="flex items-center gap-2">
+			{#if data.kvk}
+				<span class="text-xs text-rok-muted">{data.kvk.name}</span>
+			{/if}
+			{#if data.versionName}
+				<span class="badge-gold text-xs">{data.versionName}</span>
+			{/if}
+		</div>
 	</div>
 
 	<!-- View Toggle -->
@@ -139,29 +154,51 @@
 							<td class="py-2 px-2 text-rok-dim">{getRank(p) ?? '-'}</td>
 							<td class="py-2 px-2">
 								<div class="flex items-center gap-1">
-									<span class="font-medium truncate max-w-[150px]">{p.governor_name}</span>
-									{#if p.bonus_pct > 0}
-										<span class="text-[10px] text-rok-green font-medium">+{p.bonus_pct}%</span>
+									<a href="/players/{p.governor_id}" class="font-medium truncate max-w-[150px] hover:text-rok-accent transition-colors">{p.governor_name}</a>
+									{#if p.display_bonus_pct > 0 || p.bonus_pct > 0}
+										<span class="text-[10px] text-rok-green font-medium">+{p.display_bonus_pct ?? p.bonus_pct}%</span>
 									{/if}
 								</div>
 								<div class="text-xs text-rok-dim">{p.governor_id}</div>
 							</td>
 							<td class="py-2 px-2 text-right text-rok-accent whitespace-nowrap">{formatPower(p.power)}</td>
-							<td class="py-2 px-2 text-right whitespace-nowrap">{formatNumber(p.t4)}</td>
-							<td class="py-2 px-2 text-right whitespace-nowrap">{formatNumber(p.t5)}</td>
-							<td class="py-2 px-2 text-right text-rok-red whitespace-nowrap">{formatNumber(p.dead_t4)}</td>
-							<td class="py-2 px-2 text-right text-rok-red whitespace-nowrap">{formatNumber(p.dead_t5)}</td>
+							<td class="py-2 px-2 text-right whitespace-nowrap">
+								<div>{formatNumber(p.t4)}</div>
+								{#if isCombined && getFarmStats(p.governor_id)?.t4}
+									<div class="text-xs text-sky-400 font-medium">+{formatNumber(getFarmStats(p.governor_id).t4)}</div>
+								{/if}
+							</td>
+							<td class="py-2 px-2 text-right whitespace-nowrap">
+								<div>{formatNumber(p.t5)}</div>
+								{#if isCombined && getFarmStats(p.governor_id)?.t5}
+									<div class="text-xs text-sky-400 font-medium">+{formatNumber(getFarmStats(p.governor_id).t5)}</div>
+								{/if}
+							</td>
+							<td class="py-2 px-2 text-right whitespace-nowrap">
+								<div class="text-rok-red">{formatNumber(p.dead_t4)}</div>
+								{#if isCombined && getFarmStats(p.governor_id)?.dead_t4}
+									<div class="text-xs text-sky-400 font-medium">+{formatNumber(getFarmStats(p.governor_id).dead_t4)}</div>
+								{/if}
+							</td>
+							<td class="py-2 px-2 text-right whitespace-nowrap">
+								<div class="text-rok-red">{formatNumber(p.dead_t5)}</div>
+								{#if isCombined && getFarmStats(p.governor_id)?.dead_t5}
+									<div class="text-xs text-sky-400 font-medium">+{formatNumber(getFarmStats(p.governor_id).dead_t5)}</div>
+								{/if}
+							</td>
 							<td class="py-2 px-2 text-right whitespace-nowrap">
 								{#if isCombined}
-									<div class="font-semibold text-rok-accent">{p.dkp_combined != null ? formatNumber(Math.round(p.dkp_combined)) : '-'}</div>
-									<div class="text-xs text-rok-dim">
-										{p.dkp_raw != null ? formatNumber(Math.round(p.dkp_raw)) : '0'}
+									<div class="font-bold text-rok-accent">{p.dkp_combined != null ? formatNumber(Math.round(p.dkp_combined)) : '-'}</div>
+									<div class="text-xs leading-5">
+										{#if p.bonus_amount > 0}
+											<span class="text-amber-400 font-medium">+{formatNumber(Math.round(p.bonus_amount))}</span>
+										{/if}
 										{#if p.farm_contribution > 0}
-											<span class="text-rok-green">+ {formatNumber(Math.round(p.farm_contribution))}</span>
+											<span class="text-sky-400 font-medium">+{formatNumber(Math.round(p.farm_contribution))}</span>
 										{/if}
 									</div>
 								{:else}
-									<div class="font-semibold text-rok-accent">{p.dkp_raw != null ? formatNumber(Math.round(p.dkp_raw)) : '-'}</div>
+									<div class="font-bold text-rok-accent">{p.dkp_raw != null ? formatNumber(Math.round(p.dkp_raw)) : '-'}</div>
 								{/if}
 							</td>
 						</tr>

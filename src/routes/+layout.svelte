@@ -1,21 +1,20 @@
 <script lang="ts">
 	import '../app.css';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import KvkSelector from '$lib/components/KvkSelector.svelte';
 	import type { Snippet } from 'svelte';
 	import { setContext } from 'svelte';
 	import { t, type Lang } from '$lib/i18n';
 	import { invalidateAll } from '$app/navigation';
 
 	interface Props {
-		data: { user: App.Locals['user']; lang: Lang };
+		data: { user: App.Locals['user']; lang: Lang; kvks: any[]; selectedKvk: any };
 		children: Snippet;
 	}
 
 	let { data, children }: Props = $props();
 
-	let lang = $state<Lang>(data.lang);
-
-	$effect(() => { lang = data.lang; });
+	let lang: Lang = $derived(data.lang);
 
 	setContext('lang', () => lang);
 	setContext('t', (key: string, params?: Record<string, string | number>) => t(lang, key, params));
@@ -30,6 +29,9 @@
 
 <div class="min-h-screen flex flex-col">
 	<Navbar user={data.user} {lang} {toggleLang} />
+	{#if data.user}
+		<KvkSelector kvks={data.kvks ?? []} selectedKvk={data.selectedKvk} />
+	{/if}
 	<main class="flex-1 max-w-5xl mx-auto w-full px-4 py-6">
 		{@render children()}
 	</main>
