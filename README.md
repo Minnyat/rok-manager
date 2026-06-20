@@ -9,21 +9,27 @@
 ## Screenshots
 
 ### Login
+
 ![Login](docs/images/login.png)
 
 ### Rankings — Combined view with DKP breakdown
+
 ![Rankings](docs/images/rankings.png)
 
 ### Admin Panel — Overview with stats and farm account links
+
 ![Admin Panel](docs/images/admin-panel.png)
 
 ### User Management — Create users, set DKP bonus %, manage invites
+
 ![Admin Users](docs/images/admin-users.png)
 
 ### DKP Scoring — Configurable weights and recalculation
+
 ![Scores](docs/images/admin-scores.png)
 
 ### Farm Accounts — Players link farm accounts to main
+
 ![Accounts](docs/images/accounts.png)
 
 ---
@@ -34,15 +40,18 @@
 
 | Tính năng | Mô tả |
 |-----------|-------|
-| **Bảng xếp hạng DKP** | Tính điểm tự động dựa trên T4/T5 Kill và Dead với trọng số tùy chỉnh |
+| **Multi-KvK Support** | Quản lý nhiều KvK cùng lúc, mỗi KvK có dữ liệu và cấu hình riêng |
+| **Formula Plugin System** | Hệ thống plugin linh hoạt: DKP, FFA, Weighted Kill, Custom formulas |
+| **Bảng xếp hạng DKP** | Tính điểm tự động dựa trên formula được chọn cho mỗi KvK |
+| **Player Profiles** | Xem chi tiết thống kê cá nhân tại `/players/[governorId]` |
 | **Liên kết Farm Account** | Người chơi liên kết tài khoản phụ; DKP farm đóng góp % vào tài khoản chính |
 | **Tổng hợp & Cá nhân** | Xem xếp hạng có hoặc không có đóng góp farm |
-| **Bonus DKP %** | King/Admin cộng thêm % cho captain rally/garrison |
-| **Import CSV** | Nhập dữ liệu từ file CSV xuất từ ROK |
+| **Bonus DKP %** | King/Admin cộng thêm % cho captain rally/garrison (per-KvK) |
+| **Import CSV** | Nhập dữ liệu từ file CSV xuất từ ROK (per-KvK) |
 | **Quản lý người dùng** | Đăng ký qua link mời, phân quyền Admin/King/Player |
 | **Báo cáo tranh chấp** | Người chơi báo cáo liên kết tài khoản sai |
 | **Đa ngôn ngữ** | Chuyển đổi tiếng Việt / tiếng Anh |
-| **Giao diện tối** | Thiết kế tối tối ưu cho game |
+| **Giao diện tối** | Thiết kế tối ưu cho game |
 
 ## Dành cho người chơi
 
@@ -78,12 +87,20 @@
 
 ## Dành cho Admin
 
-### Import dữ liệu
+### Quản lý KvK
+
+1. Vào **Admin > KvK** để xem danh sách tất cả KvK
+2. Bấm **Tạo KvK mới** > nhập tên, slug, mô tả
+3. Chọn **Formula Type** cho KvK (DKP, FFA, Weighted Kill, Custom)
+4. Cấu hình tham số formula cho từng KvK
+
+### Import dữ liệu (per-KvK)
 
 1. Xuất CSV từ ROK (qua tool bên thứ ba)
-2. Vào **Admin > Import** > nhập tên phiên bản (VD: "KvK S3 - Tuần 4")
-3. Chọn file CSV > bấm **Import**
-4. Vào **Admin > Versions** > bấm **Kích hoạt** phiên bản vừa import
+2. Vào **Admin > KvK > [tên KvK] > Import**
+3. Nhập tên phiên bản (VD: "Tuần 4")
+4. Chọn file CSV > bấm **Import**
+5. Vào **Admin > KvK > [tên KvK] > Versions** > bấm **Kích hoạt** phiên bản
 
 ### Quản lý người dùng
 
@@ -92,11 +109,11 @@
 3. Copy link kích hoạt gửi cho người chơi
 4. Đặt **Bonus %** cho captain rally/garrison: nhập số % > bấm **Lưu**
 
-### Cấu hình DKP
+### Cấu hình DKP (per-KvK)
 
-1. Vào **Admin > Scores**
-2. Thay đổi trọng số: T4 Kill, T5 Kill, Dead T4, Dead T5
-3. Thay đổi **Farm Contribution %** (mặc định 40%)
+1. Vào **Admin > KvK > [tên KvK] > Scores**
+2. Chọn **Formula Type** (DKP, FFA, Weighted Kill, Custom)
+3. Cấu hình tham số cho formula được chọn
 4. Bấm **Lưu** > hệ thống tự động tính lại
 
 ### Xem tổng quan
@@ -126,6 +143,7 @@ npm run setup
 ```
 
 Script sẽ hướng dẫn bạn:
+
 - Đăng nhập Cloudflare (mở trình duyệt)
 - Nhập tên kingdom
 - Chọn mật khẩu admin
@@ -162,11 +180,14 @@ Push code lên `master` = tự động deploy. Để bật:
 
 | Feature | Description |
 |---------|-------------|
-| **DKP Rankings** | Automated scoring based on T4/T5 kills and deaths with configurable weights |
+| **Multi-KvK Support** | Manage multiple KvKs simultaneously, each with its own data and configuration |
+| **Formula Plugin System** | Flexible plugin system: DKP, FFA, Weighted Kill, Custom formulas |
+| **DKP Rankings** | Automated scoring based on the formula selected for each KvK |
+| **Player Profiles** | View detailed individual stats at `/players/[governorId]` |
 | **Farm Account Linking** | Players link farm accounts; farm DKP contributes a configurable % to main |
 | **Combined & Individual** | View rankings with or without farm contributions |
-| **Bonus DKP %** | King/Admin can assign bonus % to rally/garrison captains |
-| **CSV Import** | Import player data from ROK kingdom stats CSV exports |
+| **Bonus DKP %** | King/Admin can assign bonus % to rally/garrison captains (per-KvK) |
+| **CSV Import** | Import player data from ROK kingdom stats CSV exports (per-KvK) |
 | **User Management** | Invite-based registration with role system (Admin/King/Player) |
 | **Dispute System** | Players can report disputed account links for admin review |
 | **i18n** | Vietnamese and English UI toggle |
@@ -206,12 +227,20 @@ Push code lên `master` = tự động deploy. Để bật:
 
 ## For Admins
 
-### Import Data
+### Manage KvK
+
+1. Go to **Admin > KvK** to view all KvKs
+2. Click **Create new KvK** > enter name, slug, description
+3. Select **Formula Type** for the KvK (DKP, FFA, Weighted Kill, Custom)
+4. Configure formula parameters for each KvK
+
+### Import Data (per-KvK)
 
 1. Export CSV from ROK (via third-party tools)
-2. Go to **Admin > Import** > enter a version name (e.g., "KvK S3 - Week 4")
-3. Choose the CSV file > click **Import**
-4. Go to **Admin > Versions** > click **Activate** on the imported version
+2. Go to **Admin > KvK > [KvK Name] > Import**
+3. Enter a version name (e.g., "Week 4")
+4. Choose the CSV file > click **Import**
+5. Go to **Admin > KvK > [KvK Name] > Versions** > click **Activate**
 
 ### Manage Users
 
@@ -220,11 +249,11 @@ Push code lên `master` = tự động deploy. Để bật:
 3. Copy the activation link and send it to the player
 4. Set **Bonus %** for rally/garrison captains: enter the % > click **Save**
 
-### Configure DKP
+### Configure DKP (per-KvK)
 
-1. Go to **Admin > Scores**
-2. Adjust weights: T4 Kill, T5 Kill, Dead T4, Dead T5
-3. Adjust **Farm Contribution %** (default 40%)
+1. Go to **Admin > KvK > [KvK Name] > Scores**
+2. Select **Formula Type** (DKP, FFA, Weighted Kill, Custom)
+3. Configure parameters for the selected formula
 4. Click **Save** > scores recalculate automatically
 
 ### Overview
@@ -254,6 +283,7 @@ npm run setup
 ```
 
 The setup script will guide you through:
+
 - Login to Cloudflare (opens browser)
 - Enter your kingdom name
 - Choose admin password
@@ -365,10 +395,18 @@ src/
     server/
       auth.ts                # Password hashing, sessions, invite tokens
       db.ts                  # D1 database helper
+      kvk.ts                 # KvK management helpers
       scores.ts              # DKP calculation engine
       scoring-config.ts      # Scoring weights config
+      formulas/
+        registry.ts          # Formula plugin registry
+        dkp.ts               # DKP formula (default)
+        ffa.ts               # FFA formula
+        weighted-kill.ts     # Weighted Kill formula
+        custom.ts            # Custom formula
     components/
       Navbar.svelte          # Navigation bar with lang toggle
+      KvkSelector.svelte     # KvK selector dropdown
       PlayerCard.svelte      # Player stats card
       Modal.svelte           # Reusable modal
   routes/
@@ -378,59 +416,84 @@ src/
     dashboard/               # Player dashboard
     rankings/                # DKP rankings (combined/individual)
     accounts/                # Sub account management (link/unlink farm)
+    players/[governorId]/    # Player profile page
     invite/[token]/          # Invite activation page
     admin/
       +page                  # Admin overview with stats + farm links
       users/                 # User management (create, bonus %, deactivate)
-      import/                # CSV import
-      versions/              # Data version management
-      scores/                # DKP weight config + recalculate
       accounts/              # Account link management + disputes
+      kvks/                  # KvK management
+        +page                # KvK list
+        [kvkSlug]/           # KvK detail
+          +page              # KvK overview
+          import/            # CSV import (per-KvK)
+          versions/          # Data version management (per-KvK)
+          scores/            # DKP config & formula selection (per-KvK)
+          bonuses/           # Bonus recipients (per-KvK)
     api/
       auth/logout            # Logout endpoint
       lang                   # Language toggle endpoint
       search-governor        # Governor search API
+      players/search         # Player search API
 migrations/
   0001_init.sql              # Full schema
   0002_seed_admin.sql        # Admin user seed
   0003_user_bonus.sql        # Bonus DKP column
+  0004_kvk_core.sql          # KvK table and relations
+  0005_kvk_scoring_bonus.sql # Per-KvK scoring and bonus
+  0006_kvk_account_links.sql # Per-KvK account links
+  0007_formula_plugin.sql    # Formula plugin columns
+  0008_kvk_unique_name.sql   # KvK name uniqueness
 ```
 
 ### How It Works
 
-#### DKP Scoring
+#### Formula Plugin System
+
+Each KvK can use a different scoring formula. The system supports:
+
+| Formula | Description | Parameters |
+|---------|-------------|------------|
+| **DKP** | Default scoring based on T4/T5 kills and deaths | `t4_kill_weight`, `t5_kill_weight`, `dead_t4_weight`, `dead_t5_weight` |
+| **FFA** | Free-for-all scoring | Custom parameters |
+| **Weighted Kill** | Kill-focused scoring with weights | Custom parameters |
+| **Custom** | Fully customizable formula | User-defined parameters |
+
+#### DKP Scoring (Default Formula)
 
 ```
-DKP = T4_Kill x W1 + T5_Kill x W2 + Dead_T4 x W3 + Dead_T5 x W4
+DKP = T4 × t4_kill_weight + T5 × t5_kill_weight + Dead_T4 × dead_t4_weight + Dead_T5 × dead_t5_weight
 ```
 
-Default weights: T4=1, T5=3, Dead_T4=5, Dead_T5=10
+Default weights: T4=1, T5=3, Dead_T4=2, Dead_T5=4
 
 #### Farm Account Contribution
 
 ```
-Combined DKP = Individual DKP + Sum(Farm_DKP x Farm_Contribution_%)
+Combined DKP = Individual DKP + Sum(Farm_DKP × Farm_Contribution_%)
 ```
 
-#### Bonus DKP
+#### Bonus DKP (per-KvK)
 
 ```
-Boosted DKP = DKP_Raw x (1 + Bonus_%)
+Boosted DKP = DKP_Raw × (1 + Bonus_%)
 Combined = Boosted DKP + Farm Contributions
 ```
 
 #### Auto-Recalculate
 
 Scores recalculate automatically when:
+
 - A user links or unlinks a farm account
-- Admin changes scoring weights
+- Admin changes scoring formula or weights
 - Admin assigns a bonus %
+- Admin activates a new data version
 
 ### User Roles
 
 | Role | Permissions |
 |------|------------|
-| **Admin** | Full access: import data, manage users, configure scores, manage accounts |
+| **Admin** | Full access: manage KvKs, import data, manage users, configure scores, manage accounts |
 | **King** | Same as Admin (intended for kingdom leadership) |
 | **Player** | View rankings, dashboard, manage own sub accounts |
 
@@ -440,20 +503,22 @@ Scores recalculate automatically when:
 |-------|---------|
 | `users` | User accounts with roles, governor IDs, bonus % |
 | `sessions` | Auth sessions (cookie-based) |
-| `account_links` | Farm account links (user_id -> governor_id) |
-| `data_versions` | Imported CSV versions |
+| `kvks` | KvK events with formula configuration |
+| `account_links` | Farm account links (user_id → governor_id) |
+| `data_versions` | Imported CSV versions (per-KvK) |
 | `player_data` | Raw player stats per version |
 | `player_scores` | Calculated DKP scores per version |
 | `scoring_config` | DKP weight configuration |
 | `account_reports` | Disputed account reports |
+| `kvk_bonus_recipients` | Per-KvK bonus recipients |
 
 ### Customization
 
 1. Edit `src/lib/config.ts` — set `kingdomName`, `kingdomNumber`, `subtitle`
 2. Update admin credentials in `migrations/0002_seed_admin.sql`
-3. Adjust default scoring weights in `migrations/0001_init.sql`
-4. Modify translations in `src/lib/i18n.ts`
-5. Change scoring weights via **Admin > Scores** (no code changes needed)
+3. Modify translations in `src/lib/i18n.ts`
+4. Configure formula and weights via **Admin > KvK > [KvK Name] > Scores** (no code changes needed)
+5. Add custom formulas by creating new files in `src/lib/server/formulas/` and registering them
 
 > Or just run `npm run setup` — it handles all of this interactively!
 
@@ -543,9 +608,15 @@ STEP 3: $ wrangler d1 create rok-manager-db
 STEP 4: Generate admin password hash:
   $ node -e "require('bcryptjs').hash('YourPassword',10).then(console.log)"
   Update migrations/0002_seed_admin.sql with the hash
-STEP 5: $ wrangler d1 execute rok-manager-db --remote --file=migrations/0001_init.sql
+STEP 5: Run all migrations in order:
+  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0001_init.sql
   $ wrangler d1 execute rok-manager-db --remote --file=migrations/0002_seed_admin.sql
   $ wrangler d1 execute rok-manager-db --remote --file=migrations/0003_user_bonus.sql
+  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0004_kvk_core.sql
+  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0005_kvk_scoring_bonus.sql
+  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0006_kvk_account_links.sql
+  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0007_formula_plugin.sql
+  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0008_kvk_unique_name.sql
 STEP 6: $ npm run deploy
 STEP 7: Bind D1 in Cloudflare Dashboard, then $ npm run deploy again
 ```
@@ -557,9 +628,11 @@ STEP 7: Bind D1 in Cloudflare Dashboard, then $ npm run deploy again
 | Kingdom name / branding | `src/lib/config.ts` |
 | Admin password | `migrations/0002_seed_admin.sql` (bcrypt hash) |
 | Translations (vi/en) | `src/lib/i18n.ts` |
-| Scoring formula | `src/lib/server/scores.ts` |
-| Scoring weights (runtime) | Admin UI > Scores (stored in `scoring_config` table) |
-| Database schema | `migrations/0001_init.sql` |
+| Scoring formulas | `src/lib/server/formulas/*.ts` |
+| Formula registry | `src/lib/server/formulas/registry.ts` |
+| KvK management | `src/lib/server/kvk.ts` |
+| Scoring weights (runtime) | Admin UI > KvK > Scores (stored in `kvks.formula_params` JSON) |
+| Database schema | `migrations/0001_init.sql` + `0004-0008_*.sql` |
 | Auth logic | `src/lib/server/auth.ts` |
 | CSS theme / colors | `src/app.css` (Tailwind + CSS variables) |
 | Tailwind config | `tailwind.config.js` |
@@ -582,9 +655,55 @@ import { getDb } from '$lib/server/db';
 const db = getDb(platform);
 const result = await db.prepare('SELECT ...').bind(...).first();
 
+// KvK helpers
+import { getSelectedKvk, getActiveVersionForKvk } from '$lib/server/kvk';
+const kvk = await getSelectedKvk(db, url);
+const version = kvk ? await getActiveVersionForKvk(db, kvk.id) : null;
+
+// Formula plugin usage
+import { getFormula, getAllFormulas } from '$lib/server/formulas/registry';
+import '$lib/server/formulas/dkp';      // auto-register
+import '$lib/server/formulas/ffa';      // auto-register
+const formula = getFormula('dkp');
+const results = formula.calculate(playerData, params);
+
 // D1 batch operations (max ~40 per batch)
 const stmts = items.map(item => db.prepare('INSERT ...').bind(...));
 await db.batch(stmts);
+```
+
+### Adding Custom Formulas
+
+Create a new file in `src/lib/server/formulas/`:
+
+```typescript
+import { registerFormula, type Formula } from "./registry";
+
+const myFormula: Formula = {
+  id: "my-formula",
+  name: "My Custom Formula",
+  description: "Custom scoring formula",
+  params: [
+    {
+      key: "weight_1",
+      type: "number",
+      default: 1,
+      label: "Weight 1",
+      min: 0,
+      max: 100,
+    },
+  ],
+  requiredColumns: ["column1", "column2"],
+  calculate(playerData, params) {
+    return playerData.map((p) => ({
+      governor_id: p.governor_id,
+      dkp_base: p.column1 * (params.weight_1 as number),
+      breakdown: { column1: p.column1 * (params.weight_1 as number) },
+    }));
+  },
+};
+
+registerFormula(myFormula);
 ```
 
 ### Common Issues
@@ -596,3 +715,5 @@ await db.batch(stmts);
 | Wrangler serves old code locally | Kill all node processes, rebuild, restart |
 | `adapter-cloudflare` build error | Ensure `pages_build_output_dir` in wrangler.toml matches adapter output |
 | TypeScript errors in `.svelte` | Svelte 5 runes require `lang="ts"` in script tag |
+| KvK not found | Ensure migrations 0004-0008 have been run |
+| Formula not registered | Import the formula file in `src/lib/server/formulas/registry.ts` |
