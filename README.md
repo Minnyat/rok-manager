@@ -1,6 +1,6 @@
 # ROK Manager
 
-> Kingdom management system for Rise of Kingdoms (ROK). Track DKP (Death-Kill Points), manage farm accounts, and maintain transparent rankings for KvK events.
+> Kingdom management system for Rise of Kingdoms (ROK). Multi-kingdom support with DKP tracking, farm account management, DKP auctions for MGE rank slots, and transparent KvK rankings.
 
 **[Tiếng Việt](#hướng-dẫn-tiếng-việt)** | **[English](#english-guide)** | **[Donate](#donate--ủng-hộ)**
 
@@ -38,6 +38,27 @@
 
 ## Tính năng
 
+### Quản lý Kingdom (mới)
+
+| Tính năng | Mô tả |
+|-----------|-------|
+| **Đa Kingdom** | Mỗi Kingdom là một tenant riêng, quản lý KvK và thành viên độc lập |
+| **Phân cấp Kingdom** | King > R4 > Member — mỗi role có quyền riêng trong kingdom |
+| **Chuyển Kingdom** | Admin phê duyệt yêu cầu chuyển kingdom từ người chơi |
+| **Quản lý thành viên** | King/R4 xem, quản lý thành viên và trạng thái hoạt động |
+
+### DKP Auction — Đấu giá suất MGE (mới)
+
+| Tính năng | Mô tả |
+|-----------|-------|
+| **Ví coin DKP** | Chuyển đổi DKP KvK sang coin kingdom — sổ cái bất biến |
+| **Đấu giá GSP** | Generalized Second-Price auction cho 15 suất MGE |
+| **Phần thưởng MGE** | Cấu hình số tượng (sculptures) thưởng theo hạng MGE 1–15 |
+| **Live auction** | Theo dõi đấu giá theo thời gian thực |
+| **Coin carryover** | Cấu hình % giữ lại coin khi kết thúc KvK |
+
+### Tính năng cốt lõi
+
 | Tính năng | Mô tả |
 |-----------|-------|
 | **Bảng xếp hạng DKP** | Tính điểm tự động dựa trên T4/T5 Kill và Dead với trọng số tùy chỉnh |
@@ -45,7 +66,8 @@
 | **Tổng hợp & Cá nhân** | Xem xếp hạng có hoặc không có đóng góp farm |
 | **Bonus DKP %** | King/Admin cộng thêm % cho captain rally/garrison |
 | **Import CSV** | Nhập dữ liệu từ file CSV xuất từ ROK |
-| **Quản lý người dùng** | Đăng ký qua link mời, phân quyền Admin/King/Player |
+| **Quản lý người dùng** | Đăng ký qua link mời, phân quyền Admin/King/R4/Player |
+| **Quên mật khẩu** | Người chơi gửi yêu cầu reset; King/R4 phê duyệt và cấp mật khẩu tạm |
 | **Báo cáo tranh chấp** | Người chơi báo cáo liên kết tài khoản sai |
 | **Đa ngôn ngữ** | Chuyển đổi tiếng Việt / tiếng Anh |
 | **Giao diện tối** | Thiết kế tối tối ưu cho game |
@@ -167,6 +189,27 @@ Push code lên `master` = tự động deploy. Để bật:
 
 ## Features
 
+### Kingdom Management (new)
+
+| Feature | Description |
+|---------|-------------|
+| **Multi-Kingdom** | Each Kingdom is an independent tenant with its own KvKs and members |
+| **Kingdom Hierarchy** | King > R4 > Member — each role has distinct permissions |
+| **Kingdom Transfer** | Admin approves player requests to move between kingdoms |
+| **Member Management** | King/R4 can view and manage member status |
+
+### DKP Auction — MGE Slot Bidding (new)
+
+| Feature | Description |
+|---------|-------------|
+| **DKP Coin Wallet** | Convert KvK DKP into kingdom coins — immutable ledger per player |
+| **GSP Auction** | Generalized Second-Price auction for 15 MGE rank slots |
+| **MGE Rewards Config** | Configure sculpture rewards per MGE rank (1–15) |
+| **Live Auction** | Real-time auction tracking via SSE |
+| **Coin Carryover** | Configure % of coin balance to keep when a KvK closes |
+
+### Core Features
+
 | Feature | Description |
 |---------|-------------|
 | **DKP Rankings** | Automated scoring based on T4/T5 kills and deaths with configurable weights |
@@ -174,7 +217,8 @@ Push code lên `master` = tự động deploy. Để bật:
 | **Combined & Individual** | View rankings with or without farm contributions |
 | **Bonus DKP %** | King/Admin can assign bonus % to rally/garrison captains |
 | **CSV Import** | Import player data from ROK kingdom stats CSV exports |
-| **User Management** | Invite-based registration with role system (Admin/King/Player) |
+| **User Management** | Invite-based registration with role system (Admin/King/R4/Player) |
+| **Forgot Password** | Players submit reset requests; King/R4 approves and issues a temp password |
 | **Dispute System** | Players can report disputed account links for admin review |
 | **i18n** | Vietnamese and English UI toggle |
 | **Dark Theme** | Gaming-optimized dark UI |
@@ -369,27 +413,47 @@ src/
   lib/
     config.ts                # Kingdom name, branding (edit this!)
     i18n.ts                  # Vietnamese/English translations
+    i18n.auction.ts          # Auction-specific translations
     utils.ts                 # formatNumber, formatPower, formatDate
     server/
       auth.ts                # Password hashing, sessions, invite tokens
       db.ts                  # D1 database helper
       scores.ts              # DKP calculation engine
       scoring-config.ts      # Scoring weights config
+      kingdom.ts             # Kingdom tenant logic
+      auction.ts             # GSP auction engine
+      dkp.ts                 # DKP coin ledger helpers
+      password.ts            # Password reset / one-time password
+      permissions.ts         # Role-based permission checks
     components/
       Navbar.svelte          # Navigation bar with lang toggle
       PlayerCard.svelte      # Player stats card
       Modal.svelte           # Reusable modal
+      NavProgress.svelte     # Navigation progress indicator
+      PlayerSearch.svelte    # Governor search dropdown
+      Spinner.svelte         # Loading spinner
   routes/
     +layout.svelte           # Root layout with i18n context
     +layout.server.ts        # Load user session + lang
     login/                   # Login page
+    forgot-password/         # Forgot password request
     dashboard/               # Player dashboard
     rankings/                # DKP rankings (combined/individual)
     accounts/                # Sub account management (link/unlink farm)
+    settings/                # User settings (change password)
+    kingdom/transfer/        # Kingdom transfer request
+    auction/                 # Player auction view
     invite/[token]/          # Invite activation page
     admin/
       +page                  # Admin overview with stats + farm links
       users/                 # User management (create, bonus %, deactivate)
+      kingdoms/              # Kingdom list + per-kingdom settings
+      kingdoms/[number]/     # Individual kingdom management
+      kingdom/               # Kingdom transfer approvals
+      members/               # Member management
+      auction/               # Auction management
+      mge-rewards/           # MGE reward table config
+      kvks/[kvkSlug]/        # KvK detail + bonuses/import/scores/versions
       import/                # CSV import
       versions/              # Data version management
       scores/                # DKP weight config + recalculate
@@ -398,10 +462,18 @@ src/
       auth/logout            # Logout endpoint
       lang                   # Language toggle endpoint
       search-governor        # Governor search API
+      players/search         # Player search API
+      players/kingdom-search # Kingdom-scoped player search
+      auction/live           # SSE live auction stream
 migrations/
   0001_init.sql              # Full schema
   0002_seed_admin.sql        # Admin user seed
   0003_user_bonus.sql        # Bonus DKP column
+  ...
+  0009_kingdoms.sql          # Kingdom multi-tenant layer
+  0010_password_reset.sql    # Password reset support
+  0011_dkp_auction.sql       # DKP coin wallet + GSP auction
+  0012_kingdom_coin_keep.sql # coin_keep_pct per kingdom
 ```
 
 ### How It Works
@@ -439,9 +511,10 @@ Scores recalculate automatically when:
 
 | Role | Permissions |
 |------|------------|
-| **Admin** | Full access: import data, manage users, configure scores, manage accounts |
-| **King** | Same as Admin (intended for kingdom leadership) |
-| **Player** | View rankings, dashboard, manage own sub accounts |
+| **Admin** | Full access: manage kingdoms, import data, manage users, configure scores, auction |
+| **King** | Manage members, approve password resets, manage KvK/auction within kingdom |
+| **R4** | Assist King: view members, approve password resets |
+| **Player** | View rankings, dashboard, manage own sub accounts, bid in auction |
 
 ### Database Schema
 
@@ -449,12 +522,19 @@ Scores recalculate automatically when:
 |-------|---------|
 | `users` | User accounts with roles, governor IDs, bonus % |
 | `sessions` | Auth sessions (cookie-based) |
+| `kingdoms` | Kingdom tenants (number, status, king, quota) |
+| `kingdom_members` | Kingdom membership + role + active/frozen state |
 | `account_links` | Farm account links (user_id -> governor_id) |
 | `data_versions` | Imported CSV versions |
 | `player_data` | Raw player stats per version |
 | `player_scores` | Calculated DKP scores per version |
 | `scoring_config` | DKP weight configuration |
 | `account_reports` | Disputed account reports |
+| `password_reset_requests` | Forgot-password requests with kingdom snapshot |
+| `dkp_ledger` | Immutable coin wallet ledger (grant/decay/charge/refund) |
+| `auctions` | GSP auction sessions per kingdom/KvK |
+| `auction_bids` | Sealed bids per player per auction |
+| `mge_rank_rewards` | Sculpture reward per MGE rank (1–15) |
 
 ### Customization
 
@@ -556,9 +636,8 @@ STEP 3: $ wrangler d1 create rok-manager-db
 STEP 4: Generate admin password hash:
   $ node -e "require('bcryptjs').hash('YourPassword',10).then(console.log)"
   Update migrations/0002_seed_admin.sql with the hash
-STEP 5: $ wrangler d1 execute rok-manager-db --remote --file=migrations/0001_init.sql
-  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0002_seed_admin.sql
-  $ wrangler d1 execute rok-manager-db --remote --file=migrations/0003_user_bonus.sql
+STEP 5: Run all migrations in order:
+  $ for f in migrations/0*.sql; do wrangler d1 execute rok-manager-db --remote --file=$f; done
 STEP 6: $ npm run deploy
 STEP 7: Bind D1 in Cloudflare Dashboard, then $ npm run deploy again
 ```

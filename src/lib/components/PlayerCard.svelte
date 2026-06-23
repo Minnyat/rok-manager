@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { formatNumber, formatPower } from '$lib/utils';
+	import { getContext } from 'svelte';
+	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	interface Props {
 		player: {
@@ -76,12 +78,12 @@
 
 			<div class="space-y-1 text-sm">
 				<div class="flex justify-between">
-					<span class="text-rok-dim">DKP cá nhân</span>
+					<span class="text-rok-dim">{t('pc.dkpIndividual')}</span>
 					<span>{formatNumber(Math.round(scores.dkp_raw))}</span>
 				</div>
 				{#if scores.farm_contribution > 0}
 					<div class="flex justify-between">
-						<span class="text-rok-dim">Farm đóng góp</span>
+						<span class="text-rok-dim">{t('pc.farmContrib')}</span>
 						<span class="text-rok-green">+{formatNumber(Math.round(scores.farm_contribution))}</span>
 					</div>
 				{/if}

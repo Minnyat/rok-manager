@@ -1,8 +1,13 @@
-import { fail } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
 import { createInviteToken } from "$lib/server/auth";
-export const load: PageServerLoad = async ({ platform, url }) => {
+import { issueTempPassword } from "$lib/server/password";
+import { t } from "$lib/i18n";
+
+export const load: PageServerLoad = async ({ locals, platform, url }) => {
+	if (locals.user?.role !== "admin") throw redirect(303, "/admin");
+
 	const db = getDb(platform);
 	const search = url.searchParams.get("q")?.trim() || "";
 
@@ -25,20 +30,39 @@ export const load: PageServerLoad = async ({ platform, url }) => {
 				.all()
 		: await db.prepare(query).all();
 
-	return { users: users.results, baseUrl: url.origin, search };
+	// All pending forgot-password requests across every kingdom (admin handles
+	// any kingdom, plus requests from users with no active kingdom).
+	const resetRequests = await db
+		.prepare(
+			`SELECT prr.id, prr.note, prr.created_at, u.username,
+			        u.main_governor_id AS governor_id, k.number AS kingdom_number
+			 FROM password_reset_requests prr
+			 JOIN users u ON u.id = prr.user_id
+			 LEFT JOIN kingdoms k ON k.id = prr.kingdom_id
+			 WHERE prr.status = 'pending'
+			 ORDER BY prr.created_at DESC`,
+		)
+		.all();
+
+	return {
+		users: users.results,
+		resetRequests: resetRequests.results,
+		baseUrl: url.origin,
+		search,
+	};
 };
 
 export const actions: Actions = {
-	create: async ({ request, platform, url }) => {
+	create: async ({ request, locals, platform, url }) => {
 		const form = await request.formData();
 		const governorId = Number(form.get("governorId"));
 		const role = String(form.get("role") || "player");
 
 		if (!governorId || governorId <= 0) {
-			return fail(400, { error: "Governor ID không hợp lệ" });
+			return fail(400, { error: t(locals.lang, "err.invalidGovernorId") });
 		}
 		if (!["player", "king"].includes(role)) {
-			return fail(400, { error: "Role không hợp lệ" });
+			return fail(400, { error: t(locals.lang, "err.invalidRole") });
 		}
 
 		const db = getDb(platform);
@@ -49,7 +73,7 @@ export const actions: Actions = {
 			.first();
 		if (existing) {
 			return fail(400, {
-				error: `Governor ID ${governorId} đã được tạo tài khoản`,
+				error: t(locals.lang, "err.governorHasAccount", { id: governorId }),
 			});
 		}
 
@@ -63,13 +87,13 @@ export const actions: Actions = {
 		return { success: true, inviteUrl };
 	},
 
-	updateRole: async ({ request, platform }) => {
+	updateRole: async ({ request, locals, platform }) => {
 		const form = await request.formData();
 		const userId = Number(form.get("userId"));
 		const newRole = String(form.get("role"));
 
 		if (!userId || !["player", "king", "admin"].includes(newRole)) {
-			return fail(400, { error: "Dữ liệu không hợp lệ" });
+			return fail(400, { error: t(locals.lang, "err.invalidData") });
 		}
 
 		const db = getDb(platform);
@@ -99,7 +123,7 @@ export const actions: Actions = {
 		return { deactivated: true };
 	},
 
-	resetInvite: async ({ request, platform, url }) => {
+	resetInvite: async ({ request, locals, platform, url }) => {
 		const form = await request.formData();
 		const userId = Number(form.get("userId"));
 		if (!userId) return fail(400, { error: "Invalid user ID" });
@@ -111,7 +135,7 @@ export const actions: Actions = {
 			.first<{ main_governor_id: number; is_active: number }>();
 
 		if (!user || user.is_active) {
-			return fail(400, { error: "User đã kích hoạt, không thể reset invite" });
+			return fail(400, { error: t(locals.lang, "err.userActivatedNoResetInvite") });
 		}
 
 		const token = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(
@@ -128,5 +152,76 @@ export const actions: Actions = {
 			.run();
 
 		return { success: true, inviteUrl: `${url.origin}/invite/${token}` };
+	},
+
+	// Admin: issue a one-time password for any active user.
+	resetPassword: async ({ request, locals, platform }) => {
+		if (locals.user?.role !== "admin") return fail(403, { error: "Forbidden" });
+
+		const form = await request.formData();
+		const userId = Number(form.get("userId"));
+		if (!userId) return fail(400, { error: "Invalid user ID" });
+		if (userId === locals.user.id) {
+			return fail(400, { error: t(locals.lang, "err.useSettingsForOwnPassword") });
+		}
+
+		const db = getDb(platform);
+		const target = await db
+			.prepare("SELECT username, is_active FROM users WHERE id = ?")
+			.bind(userId)
+			.first<{ username: string | null; is_active: number }>();
+		if (!target || !target.is_active) {
+			return fail(400, { error: t(locals.lang, "err.userNotActivatedNoReset") });
+		}
+
+		const tempPassword = await issueTempPassword(db, userId);
+		return { resetUsername: target.username, tempPassword };
+	},
+
+	resolveResetRequest: async ({ request, locals, platform }) => {
+		if (locals.user?.role !== "admin") return fail(403, { error: "Forbidden" });
+
+		const form = await request.formData();
+		const requestId = Number(form.get("requestId"));
+		if (!requestId) return fail(400, { error: t(locals.lang, "err.missingRequest") });
+
+		const db = getDb(platform);
+		const req = await db
+			.prepare(
+				`SELECT prr.id, prr.user_id, u.username
+				 FROM password_reset_requests prr JOIN users u ON u.id = prr.user_id
+				 WHERE prr.id = ? AND prr.status = 'pending'`,
+			)
+			.bind(requestId)
+			.first<{ id: number; user_id: number; username: string | null }>();
+		if (!req) return fail(404, { error: t(locals.lang, "err.requestNotFound") });
+
+		const tempPassword = await issueTempPassword(db, req.user_id);
+		await db
+			.prepare(
+				"UPDATE password_reset_requests SET status = 'resolved', resolved_by = ?, resolved_at = unixepoch() WHERE id = ?",
+			)
+			.bind(locals.user.id, requestId)
+			.run();
+
+		return { resetUsername: req.username, tempPassword };
+	},
+
+	rejectResetRequest: async ({ request, locals, platform }) => {
+		if (locals.user?.role !== "admin") return fail(403, { error: "Forbidden" });
+
+		const form = await request.formData();
+		const requestId = Number(form.get("requestId"));
+		if (!requestId) return fail(400, { error: t(locals.lang, "err.missingRequest") });
+
+		const db = getDb(platform);
+		await db
+			.prepare(
+				"UPDATE password_reset_requests SET status = 'rejected', resolved_by = ?, resolved_at = unixepoch() WHERE id = ? AND status = 'pending'",
+			)
+			.bind(locals.user.id, requestId)
+			.run();
+
+		return { rejectedRequest: true };
 	},
 };

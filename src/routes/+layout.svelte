@@ -2,13 +2,15 @@
 	import '../app.css';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import KvkSelector from '$lib/components/KvkSelector.svelte';
+	import NavProgress from '$lib/components/NavProgress.svelte';
 	import type { Snippet } from 'svelte';
 	import { setContext } from 'svelte';
 	import { t, type Lang } from '$lib/i18n';
 	import { invalidateAll } from '$app/navigation';
+	import { navigating } from '$app/stores';
 
 	interface Props {
-		data: { user: App.Locals['user']; lang: Lang; kvks: any[]; selectedKvk: any };
+		data: { user: App.Locals['user']; lang: Lang; kvks: any[]; selectedKvk: any; kingdom: any };
 		children: Snippet;
 	}
 
@@ -28,11 +30,16 @@
 </script>
 
 <div class="min-h-screen flex flex-col">
-	<Navbar user={data.user} {lang} {toggleLang} />
+	<NavProgress />
+	<Navbar user={data.user} kingdom={data.kingdom} {lang} {toggleLang} />
 	{#if data.user}
 		<KvkSelector kvks={data.kvks ?? []} selectedKvk={data.selectedKvk} />
 	{/if}
-	<main class="flex-1 max-w-5xl mx-auto w-full px-4 py-6">
+	<main
+		class="flex-1 max-w-5xl mx-auto w-full px-4 py-6 transition-opacity duration-200"
+		class:opacity-50={$navigating}
+		class:pointer-events-none={$navigating}
+	>
 		{@render children()}
 	</main>
 </div>

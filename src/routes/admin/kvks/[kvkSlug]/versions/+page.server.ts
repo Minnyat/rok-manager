@@ -2,6 +2,7 @@ import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
 import { setActiveVersionForKvk } from "$lib/server/kvk";
+import { t } from "$lib/i18n";
 
 export const load: PageServerLoad = async ({ platform, parent }) => {
 	const db = getDb(platform);
@@ -18,13 +19,13 @@ export const load: PageServerLoad = async ({ platform, parent }) => {
 };
 
 export const actions: Actions = {
-	activate: async ({ request, platform, params }) => {
+	activate: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare("SELECT id, slug FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number; slug: string }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const form = await request.formData();
 		const versionId = Number(form.get("versionId"));

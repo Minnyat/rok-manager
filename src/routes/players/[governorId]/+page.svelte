@@ -24,7 +24,7 @@
 	<div class="flex items-center gap-3">
 		<div>
 			<h1 class="text-xl font-bold">{data.governorName ?? `Governor #${data.governorId}`}</h1>
-			<p class="text-sm text-rok-muted">ID: {data.governorId} · Tham gia {data.kvkHistory.length} KvK</p>
+			<p class="text-sm text-rok-muted">ID: {data.governorId} · {t('pl.joined', { count: data.kvkHistory.length })}</p>
 		</div>
 	</div>
 
@@ -33,7 +33,7 @@
 		<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
 			<div class="card text-center">
 				<div class="text-xl font-bold text-rok-accent">{data.summary.participationCount}</div>
-				<div class="text-xs text-rok-muted">KvK tham gia</div>
+				<div class="text-xs text-rok-muted">{t('pl.kvkJoined')}</div>
 			</div>
 			<div class="card text-center">
 				<div class="text-xl font-bold text-rok-accent">{formatNumber(Math.round(data.summary.totalCombined))}</div>
@@ -60,7 +60,7 @@
 	<!-- KvK History -->
 	{#if data.kvkHistory.length === 0}
 		<div class="card text-center py-8 text-rok-muted text-sm">
-			Không tìm thấy dữ liệu cho governor này trong bất kỳ KvK nào.
+			{t('pl.noData')}
 		</div>
 	{:else}
 		<div class="space-y-3">

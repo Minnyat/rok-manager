@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { formatDate } from '$lib/utils';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import { getContext } from 'svelte';
 	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
@@ -9,6 +10,8 @@
 		form: any;
 	}
 	let { data, form }: Props = $props();
+
+	let pending = $state<string | null>(null);
 </script>
 
 <svelte:head>
@@ -40,15 +43,27 @@
 							</div>
 						</div>
 						<div class="flex gap-2">
-							<form method="POST" action="?/resolve" use:enhance>
+							<form method="POST" action="?/resolve" use:enhance={() => {
+								pending = `resolve:resolved:${report.id}`;
+								return async ({ update }) => { await update(); pending = null; };
+							}}>
 								<input type="hidden" name="reportId" value={report.id} />
 								<input type="hidden" name="action" value="resolved" />
-								<button type="submit" class="btn-primary text-xs">{t('aa.accept')}</button>
+								<button type="submit" class="btn-primary text-xs inline-flex items-center gap-1.5" disabled={pending === `resolve:resolved:${report.id}`}>
+									{#if pending === `resolve:resolved:${report.id}`}<Spinner size={14} />{/if}
+									{t('aa.accept')}
+								</button>
 							</form>
-							<form method="POST" action="?/resolve" use:enhance>
+							<form method="POST" action="?/resolve" use:enhance={() => {
+								pending = `resolve:rejected:${report.id}`;
+								return async ({ update }) => { await update(); pending = null; };
+							}}>
 								<input type="hidden" name="reportId" value={report.id} />
 								<input type="hidden" name="action" value="rejected" />
-								<button type="submit" class="btn-secondary text-xs">{t('aa.reject')}</button>
+								<button type="submit" class="btn-secondary text-xs inline-flex items-center gap-1.5" disabled={pending === `resolve:rejected:${report.id}`}>
+									{#if pending === `resolve:rejected:${report.id}`}<Spinner size={14} />{/if}
+									{t('aa.reject')}
+								</button>
 							</form>
 						</div>
 					</div>
@@ -73,9 +88,15 @@
 							</p>
 							<p class="text-xs text-rok-dim">{formatDate(link.linked_at)}</p>
 						</div>
-						<form method="POST" action="?/unlink" use:enhance>
+						<form method="POST" action="?/unlink" use:enhance={() => {
+							pending = `unlink:${link.id}`;
+							return async ({ update }) => { await update(); pending = null; };
+						}}>
 							<input type="hidden" name="linkId" value={link.id} />
-							<button type="submit" class="btn-ghost text-xs text-rok-red">{t('aa.unlink')}</button>
+							<button type="submit" class="btn-ghost text-xs text-rok-red inline-flex items-center gap-1.5" disabled={pending === `unlink:${link.id}`}>
+								{#if pending === `unlink:${link.id}`}<Spinner size={14} />{/if}
+								{t('aa.unlink')}
+							</button>
 						</form>
 					</div>
 				{/each}

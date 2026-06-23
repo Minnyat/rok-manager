@@ -3,6 +3,7 @@
 	import { formatNumber, formatPower } from '$lib/utils';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
+	import Spinner from '$lib/components/Spinner.svelte';
 	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	interface Props {
@@ -21,6 +22,9 @@
 	let searchResults = $state<any[]>([]);
 	let searching = $state(false);
 	let selectedGovernor = $state<{ id: number; name: string } | null>(null);
+	let adding = $state(false);
+	let savingEdit = $state(false);
+	let removingId = $state<number | null>(null);
 
 	async function searchGovernor() {
 		if (searchQuery.length < 2) { searchResults = []; return; }
@@ -45,15 +49,15 @@
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
-		<h1 class="text-xl font-bold">Bonus Recipients — {data.kvk.name}</h1>
+		<h1 class="text-xl font-bold">{t('kvkb.title')} — {data.kvk.name}</h1>
 		<button class="btn-primary text-sm" onclick={() => { showAdd = !showAdd; selectedGovernor = null; searchQuery = ''; }}>
-			{showAdd ? '✕ Đóng' : '+ Thêm Bonus'}
+			{showAdd ? t('kvkb.close') : t('kvkb.addBtn')}
 		</button>
 	</div>
 
 	{#if !data.activeVersion}
 		<div class="card text-center py-6 text-rok-muted text-sm">
-			KvK này chưa có active version. Import và activate version trước khi quản lý bonus.
+			{t('kvkb.noActive')}
 		</div>
 	{:else}
 		{#if form?.error}
@@ -63,15 +67,17 @@
 		{/if}
 		{#if form?.bonusAdded || form?.bonusUpdated || form?.bonusRemoved}
 			<div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2">
-				Đã cập nhật! Recalculate: {form.count} players.
+				{t('kvkb.updated', { count: form.count })}
 			</div>
 		{/if}
 
 		{#if showAdd}
 			<div class="card">
-				<h2 class="text-sm font-medium text-rok-muted mb-3">Thêm Bonus Recipient</h2>
+				<h2 class="text-sm font-medium text-rok-muted mb-3">{t('kvkb.addTitle')}</h2>
 				<form method="POST" action="?/add" use:enhance={() => {
+					adding = true;
 					return async ({ update }) => {
+						adding = false;
 						showAdd = false;
 						selectedGovernor = null;
 						await update();
@@ -80,7 +86,7 @@
 					<div class="space-y-3">
 						<!-- Governor search -->
 						<div>
-							<label class="text-sm text-rok-text block mb-1">Governor *</label>
+							<label class="text-sm text-rok-text block mb-1">{t('kvkb.governorLabel')}</label>
 							{#if selectedGovernor}
 								<div class="flex items-center gap-2 bg-rok-surface rounded-lg px-3 py-2">
 									<span class="text-rok-accent font-medium">{selectedGovernor.name}</span>
@@ -89,13 +95,20 @@
 								</div>
 								<input type="hidden" name="governorId" value={selectedGovernor.id} />
 							{:else}
-								<input
-									type="text"
-									bind:value={searchQuery}
-									oninput={searchGovernor}
-									placeholder="Nhập tên hoặc ID governor..."
-									class="input w-full"
-								/>
+								<div class="relative">
+									<input
+										type="text"
+										bind:value={searchQuery}
+										oninput={searchGovernor}
+										placeholder={t('kvkb.searchPlaceholder')}
+										class="input w-full pr-9"
+									/>
+									{#if searching}
+										<div class="absolute right-3 top-1/2 -translate-y-1/2 text-rok-muted">
+											<Spinner size={16} />
+										</div>
+									{/if}
+								</div>
 								{#if searchResults.length > 0}
 									<div class="border border-rok-border rounded-lg mt-1 max-h-40 overflow-y-auto">
 										{#each searchResults as gov}
@@ -116,7 +129,7 @@
 
 						<div class="grid grid-cols-2 gap-3">
 							<div>
-								<label for="bonus-pct" class="text-sm text-rok-text block mb-1">Bonus % *</label>
+								<label for="bonus-pct" class="text-sm text-rok-text block mb-1">{t('kvkb.bonusPctLabel')}</label>
 								<input
 									id="bonus-pct"
 									name="bonusPct"
@@ -130,18 +143,21 @@
 								/>
 							</div>
 							<div>
-								<label for="bonus-note" class="text-sm text-rok-text block mb-1">Ghi chú</label>
+								<label for="bonus-note" class="text-sm text-rok-text block mb-1">{t('c.note')}</label>
 								<input
 									id="bonus-note"
 									name="note"
 									type="text"
-									placeholder="VD: Captain, Rally Lead..."
+									placeholder={t('kvkb.notePlaceholder')}
 									class="input w-full"
 								/>
 							</div>
 						</div>
 
-						<button type="submit" class="btn-primary">Thêm Bonus</button>
+						<button type="submit" class="btn-primary inline-flex items-center gap-1.5" disabled={adding}>
+							{#if adding}<Spinner size={16} />{/if}
+							{t('kvkb.addSubmit')}
+						</button>
 					</div>
 				</form>
 			</div>
@@ -150,7 +166,7 @@
 		<!-- Bonus list -->
 		{#if data.bonuses.length === 0}
 			<div class="card text-center py-8 text-rok-muted text-sm">
-				Chưa có bonus recipient nào. Nhấn "Thêm Bonus" để bắt đầu.
+				{t('kvkb.empty')}
 			</div>
 		{:else}
 			<div class="overflow-x-auto -mx-4 px-4">
@@ -163,7 +179,7 @@
 							<th class="py-2 px-2 text-right text-rok-muted">Bonus %</th>
 							<th class="py-2 px-2 text-right text-rok-muted">Bonus Amount</th>
 							<th class="py-2 px-2 text-right text-rok-muted">DKP Raw</th>
-							<th class="py-2 px-2 text-left text-rok-muted">Ghi chú</th>
+							<th class="py-2 px-2 text-left text-rok-muted">{t('c.note')}</th>
 							<th class="py-2 px-2 text-right text-rok-muted">Actions</th>
 						</tr>
 					</thead>
@@ -174,7 +190,9 @@
 								<tr class="border-b border-rok-border/50 bg-rok-surface/30">
 									<td class="py-2 px-2" colspan="8">
 										<form method="POST" action="?/edit" use:enhance={() => {
+											savingEdit = true;
 											return async ({ update }) => {
+												savingEdit = false;
 												editingId = null;
 												await update();
 											};
@@ -183,9 +201,12 @@
 											<span class="text-rok-accent font-medium min-w-[120px]">{b.governor_name}</span>
 											<input type="number" name="bonusPct" value={b.bonus_pct} step="5" min="-100" max="100" class="input w-20 text-right" />
 											<span class="text-rok-dim">%</span>
-											<input type="text" name="note" value={b.note ?? ''} placeholder="Ghi chú" class="input flex-1 min-w-[120px]" />
-											<button type="submit" class="btn-primary text-xs px-2 py-1">Lưu</button>
-											<button type="button" class="btn-ghost text-xs px-2 py-1" onclick={() => (editingId = null)}>Hủy</button>
+											<input type="text" name="note" value={b.note ?? ''} placeholder={t('c.note')} class="input flex-1 min-w-[120px]" />
+											<button type="submit" class="btn-primary text-xs px-2 py-1 inline-flex items-center gap-1" disabled={savingEdit}>
+												{#if savingEdit}<Spinner size={12} />{/if}
+												{t('c.save')}
+											</button>
+											<button type="button" class="btn-ghost text-xs px-2 py-1" onclick={() => (editingId = null)} disabled={savingEdit}>{t('c.cancel')}</button>
 										</form>
 									</td>
 								</tr>
@@ -207,10 +228,19 @@
 									<td class="py-2 px-2 text-rok-dim text-xs">{b.note ?? '-'}</td>
 									<td class="py-2 px-2 text-right">
 										<div class="flex gap-1 justify-end">
-											<button class="text-xs text-rok-accent hover:underline" onclick={() => (editingId = b.id)}>Sửa</button>
-											<form method="POST" action="?/remove" use:enhance class="inline">
+											<button class="text-xs text-rok-accent hover:underline" onclick={() => (editingId = b.id)}>{t('c.edit')}</button>
+											<form method="POST" action="?/remove" use:enhance={() => {
+												removingId = b.id;
+												return async ({ update }) => {
+													await update();
+													removingId = null;
+												};
+											}} class="inline">
 												<input type="hidden" name="id" value={b.id} />
-												<button type="submit" class="text-xs text-rok-red hover:underline">Xóa</button>
+												<button type="submit" class="text-xs text-rok-red hover:underline inline-flex items-center gap-1" disabled={removingId === b.id}>
+													{#if removingId === b.id}<Spinner size={12} />{/if}
+													{t('c.remove')}
+												</button>
 											</form>
 										</div>
 									</td>

@@ -9,6 +9,7 @@ import {
 	validateParams,
 } from "$lib/server/formulas/registry";
 import { getKvks, getActiveVersionForKvk, updateKvk } from "$lib/server/kvk";
+import { t } from "$lib/i18n";
 
 // Import all formulas (auto-register)
 import "$lib/server/formulas/dkp";
@@ -106,34 +107,34 @@ export const load: PageServerLoad = async ({ platform, parent }) => {
 };
 
 export const actions: Actions = {
-	calculate: async ({ platform, params }) => {
+	calculate: async ({ platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare("SELECT id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const activeVersion = await getActiveVersionForKvk(db, kvk.id);
-		if (!activeVersion) return fail(400, { error: "Chưa có phiên bản active" });
+		if (!activeVersion) return fail(400, { error: t(locals.lang, "err.noActiveVersion") });
 
 		const count = await calculateScores(db, activeVersion.id);
 		return { success: true, count };
 	},
 
-	changeFormula: async ({ request, platform, params }) => {
+	changeFormula: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare("SELECT id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const formData = await request.formData();
 		const newFormulaId = formData.get("formulaType") as string;
 
 		if (!newFormulaId || !getFormula(newFormulaId)) {
-			return fail(400, { error: "Formula không hợp lệ" });
+			return fail(400, { error: t(locals.lang, "err.invalidFormula") });
 		}
 
 		// Get default params for new formula
@@ -171,7 +172,7 @@ export const actions: Actions = {
 		return { formulaChanged: true, count };
 	},
 
-	saveParam: async ({ request, platform, params }) => {
+	saveParam: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare(
@@ -179,13 +180,13 @@ export const actions: Actions = {
 			)
 			.bind(params.kvkSlug)
 			.first<{ id: number; formula_type: string; formula_params: string }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const formData = await request.formData();
 		const key = formData.get("key") as string;
 		const rawValue = formData.get("value") as string;
 
-		if (!key) return fail(400, { error: "Thiếu param key" });
+		if (!key) return fail(400, { error: t(locals.lang, "err.missingParamKey") });
 
 		const currentParams = kvk.formula_params
 			? JSON.parse(kvk.formula_params)
@@ -194,16 +195,16 @@ export const actions: Actions = {
 		// Update the specific param
 		if (key === "farm_contribution_pct" || key === "farm_pct") {
 			const numVal = parseFloat(rawValue);
-			if (isNaN(numVal)) return fail(400, { error: "Giá trị không hợp lệ" });
+			if (isNaN(numVal)) return fail(400, { error: t(locals.lang, "err.invalidValue") });
 			currentParams.farm_contribution_pct = numVal;
 		} else {
 			const formula = getFormula(kvk.formula_type ?? "dkp");
 			const paramDef = formula?.params.find((p) => p.key === key);
-			if (!paramDef) return fail(400, { error: "Param không hợp lệ" });
+			if (!paramDef) return fail(400, { error: t(locals.lang, "err.invalidParam") });
 
 			if (paramDef.type === "number") {
 				const numVal = parseFloat(rawValue);
-				if (isNaN(numVal)) return fail(400, { error: "Giá trị không hợp lệ" });
+				if (isNaN(numVal)) return fail(400, { error: t(locals.lang, "err.invalidValue") });
 				currentParams[key] = numVal;
 			} else {
 				currentParams[key] = rawValue;
@@ -224,25 +225,25 @@ export const actions: Actions = {
 		return { paramSaved: true, count };
 	},
 
-	copyFormula: async ({ request, platform, params }) => {
+	copyFormula: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare("SELECT id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const formData = await request.formData();
 		const fromKvkId = Number(formData.get("fromKvkId"));
 
-		if (!fromKvkId) return fail(400, { error: "Chọn KvK nguồn" });
+		if (!fromKvkId) return fail(400, { error: t(locals.lang, "err.selectSourceKvk") });
 
 		const sourceKvk = await db
 			.prepare("SELECT formula_type, formula_params FROM kvks WHERE id = ?")
 			.bind(fromKvkId)
 			.first<{ formula_type: string; formula_params: string }>();
 
-		if (!sourceKvk) return fail(404, { error: "Không tìm thấy KvK nguồn" });
+		if (!sourceKvk) return fail(404, { error: t(locals.lang, "err.sourceKvkNotFound") });
 
 		await updateKvk(db, kvk.id, {
 			formula_type: sourceKvk.formula_type,
@@ -259,13 +260,13 @@ export const actions: Actions = {
 		return { formulaCopied: true, count };
 	},
 
-	resetDefaults: async ({ platform, params }) => {
+	resetDefaults: async ({ platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare("SELECT id, formula_type FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number; formula_type: string }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const formulaId = kvk.formula_type ?? "dkp";
 		const defaultParams = getDefaultParams(formulaId);

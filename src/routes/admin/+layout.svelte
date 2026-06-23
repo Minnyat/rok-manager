@@ -1,18 +1,28 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/stores';
+	import { getContext } from 'svelte';
+	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	interface Props {
+		data: { isSystemAdmin: boolean; manageKingdomId: number | null; kingdomRole: string | null };
 		children: Snippet;
 	}
-	let { children }: Props = $props();
+	let { data, children }: Props = $props();
 
-	const links = [
-		{ href: '/admin', label: 'Tổng quan' },
-		{ href: '/admin/kvks', label: '⚔️ KvKs' },
-		{ href: '/admin/users', label: 'Users' },
-		{ href: '/admin/accounts', label: 'Accounts' },
+	const allLinks = [
+		{ href: '/admin', labelKey: 'anav.overview', adminOnly: true },
+		{ href: '/admin/kingdoms', labelKey: 'anav.kingdoms', adminOnly: true },
+		{ href: '/admin/kvks', labelKey: 'anav.kvks', adminOnly: false },
+		{ href: '/admin/auction', labelKey: 'auction.tab', adminOnly: false },
+		{ href: '/admin/kingdom', labelKey: 'kdcfg.tab', adminOnly: false },
+		{ href: '/admin/members', labelKey: 'anav.members', adminOnly: false },
+		{ href: '/admin/mge-rewards', labelKey: 'auction.adminTab', adminOnly: true },
+		{ href: '/admin/users', labelKey: 'anav.users', adminOnly: true },
+		{ href: '/admin/accounts', labelKey: 'anav.accounts', adminOnly: true },
 	];
+
+	let links = $derived(allLinks.filter((l) => !l.adminOnly || data.isSystemAdmin));
 </script>
 
 <div>
@@ -23,7 +33,7 @@
 				class="px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors
 					{$page.url.pathname === link.href ? 'bg-rok-accent text-rok-bg font-medium' : 'text-rok-muted hover:bg-rok-surface'}"
 			>
-				{link.label}
+				{t(link.labelKey)}
 			</a>
 		{/each}
 	</nav>

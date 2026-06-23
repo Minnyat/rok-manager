@@ -4,17 +4,27 @@
 
 	interface Props {
 		user: App.Locals['user'];
+		kingdom?: { number: string; display_name: string | null } | null;
 		lang: Lang;
 		toggleLang: () => void;
 	}
-	let { user, lang, toggleLang }: Props = $props();
+	let { user, kingdom = null, lang, toggleLang }: Props = $props();
 	let menuOpen = $state(false);
+
+	// Admin link is for the system admin and any kingdom manager (King / R4).
+	let canManage = $derived(
+		!!user && (user.role === 'admin' || user.kingdomRole === 'king' || user.kingdomRole === 'r4')
+	);
 </script>
 
 <nav class="sticky top-0 z-50 bg-rok-surface/95 backdrop-blur border-b border-rok-border">
 	<div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-		<a href="/dashboard" class="flex items-center gap-2 font-bold text-rok-accent text-lg">
-			{navBrand()}
+		<a href={user ? '/dashboard' : '/'} class="flex items-center gap-2 font-bold text-rok-accent text-lg">
+			{#if kingdom}
+				⚔️ KD {kingdom.number}
+			{:else}
+				{navBrand()}
+			{/if}
 		</a>
 
 		{#if user}
@@ -34,7 +44,9 @@
 				<a href="/dashboard" class="btn-ghost text-sm">{t(lang, 'nav.dashboard')}</a>
 				<a href="/accounts" class="btn-ghost text-sm">{t(lang, 'nav.accounts')}</a>
 				<a href="/rankings" class="btn-ghost text-sm">{t(lang, 'nav.rankings')}</a>
-				{#if user.role === 'admin' || user.role === 'king'}
+				<a href="/auction" class="btn-ghost text-sm">{t(lang, 'nav.auction')}</a>
+				<a href="/settings" class="btn-ghost text-sm">⚙️ {t(lang, 'nav.settings')}</a>
+				{#if canManage}
 					<a href="/admin" class="btn-ghost text-sm text-rok-accent">{t(lang, 'nav.admin')}</a>
 				{/if}
 				<div class="ml-2 pl-2 border-l border-rok-border flex items-center gap-2">
@@ -45,6 +57,12 @@
 				</div>
 				<button class="btn-ghost text-xs ml-1" onclick={toggleLang}>{t(lang, 'lang.toggle')}</button>
 			</div>
+		{:else}
+			<!-- Anonymous: login at the top -->
+			<div class="flex items-center gap-2">
+				<button class="btn-ghost text-xs" onclick={toggleLang}>{t(lang, 'lang.toggle')}</button>
+				<a href="/login" class="btn-primary text-sm">{t(lang, 'login.submit')}</a>
+			</div>
 		{/if}
 	</div>
 
@@ -54,7 +72,9 @@
 			<a href="/dashboard" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.dashboard')}</a>
 			<a href="/accounts" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.accounts')}</a>
 			<a href="/rankings" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.rankings')}</a>
-			{#if user.role === 'admin' || user.role === 'king'}
+			<a href="/auction" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.auction')}</a>
+			<a href="/settings" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>⚙️ {t(lang, 'nav.settings')}</a>
+			{#if canManage}
 				<a href="/admin" class="block py-2 text-sm text-rok-accent" onclick={() => (menuOpen = false)}>{t(lang, 'nav.admin')}</a>
 			{/if}
 			<div class="pt-2 border-t border-rok-border flex items-center justify-between">

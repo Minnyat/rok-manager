@@ -3,12 +3,13 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
 import { calculateScores } from "$lib/server/scores";
 import { getSelectedKvk, getActiveVersionForKvk } from "$lib/server/kvk";
+import { t } from "$lib/i18n";
 
 export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	if (!locals.user) throw redirect(303, "/login");
 
 	const db = getDb(platform);
-	const kvk = await getSelectedKvk(db, url);
+	const kvk = await getSelectedKvk(db, url, locals.user.kingdomId);
 	const activeVersion = kvk ? await getActiveVersionForKvk(db, kvk.id) : null;
 
 	// Load links - try KvK-specific first, fallback to global
@@ -62,18 +63,24 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 export const actions: Actions = {
 	add: async ({ request, locals, platform, url }) => {
 		if (!locals.user) throw redirect(303, "/login");
+		// Frozen/removed members (no active kingdom) are read-only.
+		if (!locals.user.kingdomId && locals.user.role !== "admin") {
+			return fail(403, {
+				error: t(locals.lang, "err.accountNoKingdom"),
+			});
+		}
 
 		const form = await request.formData();
 		const query = String(form.get("query") || "").trim();
 		if (!query)
-			return fail(400, { error: "Vui lòng nhập ID hoặc tên governor" });
+			return fail(400, { error: t(locals.lang, "err.enterGovernorIdOrName") });
 
 		const db = getDb(platform);
-		const kvk = await getSelectedKvk(db, url);
+		const kvk = await getSelectedKvk(db, url, locals.user.kingdomId);
 		const activeVersion = kvk ? await getActiveVersionForKvk(db, kvk.id) : null;
 
 		if (!activeVersion)
-			return fail(400, { error: "Chưa có dữ liệu. Liên hệ Admin." });
+			return fail(400, { error: t(locals.lang, "err.noDataContactAdmin") });
 
 		let player;
 		const numQuery = Number(query);
@@ -95,10 +102,16 @@ export const actions: Actions = {
 		}
 
 		if (!player)
-			return fail(404, { error: `Không tìm thấy governor "${query}"`, query });
+			return fail(404, {
+				error: t(locals.lang, "err.governorNotFound", { query }),
+				query,
+			});
 
 		if (player.governor_id === locals.user.mainGovernorId) {
-			return fail(400, { error: "Đây là tài khoản chính của bạn", query });
+			return fail(400, {
+				error: t(locals.lang, "err.thisIsYourMain"),
+				query,
+			});
 		}
 
 		// Check existing link in KvK scope
@@ -114,12 +127,14 @@ export const actions: Actions = {
 				if (existingKvkLink) {
 					if (existingKvkLink.user_id === locals.user.id) {
 						return fail(400, {
-							error: "Bạn đã liên kết tài khoản này rồi",
+							error: t(locals.lang, "err.alreadyLinked"),
 							query,
 						});
 					}
 					return fail(409, {
-						error: `Tài khoản "${player.governor_name}" đã được người khác liên kết`,
+						error: t(locals.lang, "err.linkedByOther", {
+							name: player.governor_name,
+						}),
 						canReport: true,
 						disputedGovernorId: player.governor_id,
 						disputedGovernorName: player.governor_name,
@@ -165,7 +180,7 @@ export const actions: Actions = {
 		if (!linkId) return fail(400, { error: "Invalid link ID" });
 
 		const db = getDb(platform);
-		const kvk = await getSelectedKvk(db, url);
+		const kvk = await getSelectedKvk(db, url, locals.user.kingdomId);
 
 		// Try KvK-specific delete first
 		if (kvk) {

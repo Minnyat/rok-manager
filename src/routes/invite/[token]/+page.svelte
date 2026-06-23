@@ -5,7 +5,7 @@
 	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	interface Props {
-		data: { governorName: string; governorId: number };
+		data: { governorName: string; governorId: number; isKing?: boolean };
 		form: { error?: string; username?: string } | null;
 	}
 	let { data, form }: Props = $props();
@@ -23,7 +23,7 @@
 			<h1 class="text-xl font-bold">{t('inv.welcome')}</h1>
 			<p class="text-sm text-rok-muted mt-1">{t('inv.activateFor')}</p>
 			<p class="text-rok-accent font-semibold mt-1">{data.governorName}</p>
-			<p class="text-xs text-rok-dim">ID: {data.governorId}</p>
+			{#if !data.isKing}<p class="text-xs text-rok-dim">ID: {data.governorId}</p>{/if}
 		</div>
 
 		{#if form?.error}

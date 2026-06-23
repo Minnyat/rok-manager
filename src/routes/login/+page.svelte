@@ -65,5 +65,9 @@
 				</button>
 			</div>
 		</form>
+
+		<div class="text-center mt-4">
+			<a href="/forgot-password" class="text-sm text-rok-muted hover:text-rok-accent">{t('login.forgot')}</a>
+		</div>
 	</div>
 </div>

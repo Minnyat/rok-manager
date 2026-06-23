@@ -7,6 +7,11 @@
 		-webkit-tap-highlight-color: transparent;
 	}
 
+	/* Force 24-hour clock on all datetime-local inputs (Chrome/Edge/Safari). */
+	input[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
+		display: none;
+	}
+
 	::-webkit-scrollbar {
 		width: 6px;
 		height: 6px;
@@ -28,7 +33,19 @@
 
 @layer components {
 	.btn {
-		@apply px-4 py-2 rounded-lg font-medium text-sm transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+		@apply px-4 py-2 rounded-lg font-medium text-sm transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+		/* Instant tactile feedback on tap/click so actions never feel ignored. */
+		@apply active:scale-[0.97];
+	}
+
+	/* Disabled buttons should not look "pressed" when tapped. */
+	.btn:disabled {
+		@apply scale-100;
+	}
+
+	/* Helper for clickable non-button elements (cards, rows, tiles). */
+	.tappable {
+		@apply transition duration-150 active:scale-[0.98] cursor-pointer;
 	}
 
 	.btn-primary {

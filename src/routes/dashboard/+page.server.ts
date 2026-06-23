@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	if (!locals.user) throw redirect(303, "/login");
 
 	const db = getDb(platform);
-	const kvk = await getSelectedKvk(db, url);
+	const kvk = await getSelectedKvk(db, url, locals.user.kingdomId);
 
 	if (!kvk) {
 		return {

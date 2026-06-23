@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ url, platform, locals }) => {
 	}
 
 	if (!activeVersion) {
-		const kvk = await getSelectedKvk(db, url);
+		const kvk = await getSelectedKvk(db, url, locals.user.kingdomId);
 		if (kvk) {
 			activeVersion = await getActiveVersionForKvk(db, kvk.id);
 		}

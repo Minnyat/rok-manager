@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
 import { calculateScores } from "$lib/server/scores";
 import { getActiveVersionForKvk } from "$lib/server/kvk";
+import { t } from "$lib/i18n";
 
 export const load: PageServerLoad = async ({ platform, parent }) => {
 	const db = getDb(platform);
@@ -66,7 +67,7 @@ export const actions: Actions = {
 			.prepare("SELECT id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const form = await request.formData();
 		const governorId = Number(form.get("governorId"));
@@ -74,9 +75,9 @@ export const actions: Actions = {
 		const note = String(form.get("note") || "").trim() || null;
 
 		if (!governorId || governorId <= 0)
-			return fail(400, { error: "Governor ID không hợp lệ" });
+			return fail(400, { error: t(locals.lang, "err.invalidGovernorId") });
 		if (isNaN(bonusPct) || bonusPct < -100 || bonusPct > 100) {
-			return fail(400, { error: "Bonus phải từ -100% đến 100%" });
+			return fail(400, { error: t(locals.lang, "err.bonusRange") });
 		}
 
 		try {
@@ -101,7 +102,7 @@ export const actions: Actions = {
 				)
 				.run();
 		} catch (e: any) {
-			return fail(400, { error: `Lỗi: ${e.message}` });
+			return fail(400, { error: t(locals.lang, "err.generic", { msg: e.message }) });
 		}
 
 		const activeVersion = await getActiveVersionForKvk(db, kvk.id);
@@ -119,7 +120,7 @@ export const actions: Actions = {
 			.prepare("SELECT id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const form = await request.formData();
 		const id = Number(form.get("id"));
@@ -128,7 +129,7 @@ export const actions: Actions = {
 
 		if (!id) return fail(400, { error: "Invalid ID" });
 		if (isNaN(bonusPct) || bonusPct < -100 || bonusPct > 100) {
-			return fail(400, { error: "Bonus phải từ -100% đến 100%" });
+			return fail(400, { error: t(locals.lang, "err.bonusRange") });
 		}
 
 		await db
@@ -148,13 +149,13 @@ export const actions: Actions = {
 		return { bonusUpdated: true, count };
 	},
 
-	remove: async ({ request, platform, params }) => {
+	remove: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare("SELECT id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
 			.first<{ id: number }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const form = await request.formData();
 		const id = Number(form.get("id"));

@@ -39,12 +39,23 @@ export async function validateSession(
 	const now = Math.floor(Date.now() / 1000);
 	const row = await db
 		.prepare(
-			`SELECT u.id, u.username, u.role, u.main_governor_id
-			 FROM sessions s JOIN users u ON s.user_id = u.id
+			`SELECT u.id, u.username, u.role, u.main_governor_id, u.must_change_password,
+			        km.kingdom_id AS kingdom_id, km.role AS kingdom_role
+			 FROM sessions s
+			 JOIN users u ON s.user_id = u.id
+			 LEFT JOIN kingdom_members km ON km.user_id = u.id AND km.status = 'active'
 			 WHERE s.id = ? AND s.expires_at > ? AND u.is_active = 1`
 		)
 		.bind(sessionId, now)
-		.first<{ id: number; username: string; role: string; main_governor_id: number }>();
+		.first<{
+			id: number;
+			username: string;
+			role: string;
+			main_governor_id: number;
+			must_change_password: number;
+			kingdom_id: number | null;
+			kingdom_role: string | null;
+		}>();
 
 	if (!row) return null;
 
@@ -52,7 +63,10 @@ export async function validateSession(
 		id: row.id,
 		username: row.username,
 		role: row.role as 'admin' | 'king' | 'player',
-		mainGovernorId: row.main_governor_id
+		mainGovernorId: row.main_governor_id,
+		mustChangePassword: !!row.must_change_password,
+		kingdomId: row.kingdom_id ?? null,
+		kingdomRole: (row.kingdom_role as 'king' | 'r4' | 'member' | null) ?? null
 	};
 }
 
@@ -71,17 +85,19 @@ export function clearSessionCookie(): string {
 export async function createInviteToken(
 	db: D1Database,
 	mainGovernorId: number,
-	role: 'player' | 'king' = 'player'
+	role: 'player' | 'king' = 'player',
+	kingdomId: number | null = null,
+	kingdomRole: 'king' | 'r4' | 'member' | null = null
 ): Promise<string> {
 	const token = generateToken();
 	const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7 days
 
 	await db
 		.prepare(
-			`INSERT INTO users (main_governor_id, role, invite_token, invite_expires_at)
-			 VALUES (?, ?, ?, ?)`
+			`INSERT INTO users (main_governor_id, role, invite_token, invite_expires_at, invite_kingdom_id, invite_kingdom_role)
+			 VALUES (?, ?, ?, ?, ?, ?)`
 		)
-		.bind(mainGovernorId, role, token, expiresAt)
+		.bind(mainGovernorId, role, token, expiresAt, kingdomId, kingdomRole)
 		.run();
 
 	return token;

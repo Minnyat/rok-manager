@@ -1,19 +1,23 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { formatDate } from '$lib/utils';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import { getContext } from 'svelte';
 	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	import { goto } from '$app/navigation';
 
 	interface Props {
-		data: { users: any[]; baseUrl: string; search: string };
+		data: { users: any[]; resetRequests: any[]; baseUrl: string; search: string };
 		form: any;
 	}
 	let { data, form }: Props = $props();
 
 	let copiedUrl = $state('');
 	let searchQuery = $state(data.search);
+
+	let creatingUser = $state(false);
+	let pending = $state<string | null>(null);
 
 	let govSearch = $state('');
 	let govResults = $state<any[]>([]);
@@ -58,6 +62,61 @@
 <div class="space-y-6">
 	<h1 class="text-xl font-bold">{t('au.title')}</h1>
 
+	<!-- One-time password issued: show once so it can be relayed to the user -->
+	{#if form?.tempPassword}
+		<div class="bg-rok-accent/10 border border-rok-accent/40 text-sm rounded-lg px-3 py-3 space-y-2">
+			<p class="font-medium text-rok-accent">{t('au.tempPasswordIssued', { name: form.resetUsername ?? 'user' })}</p>
+			<div class="flex items-center gap-2">
+				<code class="text-lg font-bold tracking-widest break-all flex-1">{form.tempPassword}</code>
+				<button class="btn-primary text-xs py-1" onclick={() => copyInvite(form.tempPassword)}>
+					{copiedUrl === form.tempPassword ? t('au.copied') : t('au.copy')}
+				</button>
+			</div>
+			<p class="text-xs text-rok-dim">
+				{t('au.tempPasswordHint')}
+			</p>
+		</div>
+	{/if}
+
+	<!-- Pending forgot-password requests (all kingdoms) -->
+	{#if data.resetRequests.length > 0}
+		<div class="space-y-2">
+			<h2 class="text-sm font-medium text-rok-muted">{t('au.resetRequests')}</h2>
+			{#each data.resetRequests as r}
+				<div class="card flex items-center justify-between gap-3 flex-wrap">
+					<div class="text-sm">
+						<span class="font-medium">{r.username}</span>
+						<span class="text-xs text-rok-dim ml-2">Gov {r.governor_id}</span>
+						{#if r.kingdom_number}<span class="badge bg-rok-surface text-rok-muted text-xs ml-1">KD {r.kingdom_number}</span>{/if}
+						{#if r.note}<p class="text-xs text-rok-muted mt-0.5">“{r.note}”</p>{/if}
+					</div>
+					<div class="flex gap-1">
+						<form method="POST" action="?/resolveResetRequest" use:enhance={() => {
+							pending = `resolveReset:${r.id}`;
+							return async ({ update }) => { await update(); pending = null; };
+						}}>
+							<input type="hidden" name="requestId" value={r.id} />
+							<button type="submit" class="btn-primary text-xs py-1 inline-flex items-center gap-1.5" disabled={pending === `resolveReset:${r.id}`}>
+								{#if pending === `resolveReset:${r.id}`}<Spinner size={14} />{/if}
+								{t('au.issueNewPassword')}
+							</button>
+						</form>
+						<form method="POST" action="?/rejectResetRequest" use:enhance={() => {
+							pending = `rejectReset:${r.id}`;
+							return async ({ update }) => { await update(); pending = null; };
+						}}>
+							<input type="hidden" name="requestId" value={r.id} />
+							<button type="submit" class="btn-ghost text-xs text-rok-red inline-flex items-center gap-1.5" disabled={pending === `rejectReset:${r.id}`}>
+								{#if pending === `rejectReset:${r.id}`}<Spinner size={14} />{/if}
+								{t('c.reject')}
+							</button>
+						</form>
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+
 	<!-- Create user -->
 	<div class="card">
 		<h2 class="text-sm font-medium text-rok-muted mb-3">{t('au.createTitle')}</h2>
@@ -80,7 +139,13 @@
 			</div>
 		{/if}
 
-		<form method="POST" action="?/create" use:enhance>
+		<form method="POST" action="?/create" use:enhance={() => {
+			creatingUser = true;
+			return async ({ update }) => {
+				creatingUser = false;
+				await update();
+			};
+		}}>
 			<div class="flex flex-wrap gap-2 items-end">
 				<div class="relative flex-1 min-w-[200px]">
 					<input
@@ -116,7 +181,10 @@
 					<option value="player">Player</option>
 					<option value="king">King</option>
 				</select>
-				<button type="submit" class="btn-primary" disabled={!selectedGov}>{t('au.createBtn')}</button>
+				<button type="submit" class="btn-primary inline-flex items-center justify-center gap-1.5" disabled={!selectedGov || creatingUser}>
+					{#if creatingUser}<Spinner size={16} />{/if}
+					{t('au.createBtn')}
+				</button>
 			</div>
 			{#if selectedGov}
 				<div class="mt-2 text-xs text-rok-muted">
@@ -161,15 +229,37 @@
 							>
 								{copiedUrl.includes(user.invite_token) ? t('au.copied') : t('au.copyLink')}
 							</button>
-							<form method="POST" action="?/resetInvite" use:enhance>
+							<form method="POST" action="?/resetInvite" use:enhance={() => {
+								pending = `resetInvite:${user.id}`;
+								return async ({ update }) => { await update(); pending = null; };
+							}}>
 								<input type="hidden" name="userId" value={user.id} />
-								<button type="submit" class="btn-ghost text-xs">{t('au.resetLink')}</button>
+								<button type="submit" class="btn-ghost text-xs inline-flex items-center gap-1.5" disabled={pending === `resetInvite:${user.id}`}>
+									{#if pending === `resetInvite:${user.id}`}<Spinner size={14} />{/if}
+									{t('au.resetLink')}
+								</button>
 							</form>
 						{/if}
 						{#if user.is_active && user.role !== 'admin'}
-							<form method="POST" action="?/deactivate" use:enhance>
+							<form method="POST" action="?/resetPassword" use:enhance={() => {
+								pending = `reset:${user.id}`;
+								return async ({ update }) => { await update(); pending = null; };
+							}}>
 								<input type="hidden" name="userId" value={user.id} />
-								<button type="submit" class="btn-ghost text-xs text-rok-red">{t('au.deactivate')}</button>
+								<button type="submit" class="btn-ghost text-xs text-rok-accent inline-flex items-center gap-1.5" disabled={pending === `reset:${user.id}`}>
+									{#if pending === `reset:${user.id}`}<Spinner size={14} />{/if}
+									{t('au.resetPasswordShort')}
+								</button>
+							</form>
+							<form method="POST" action="?/deactivate" use:enhance={() => {
+								pending = `deactivate:${user.id}`;
+								return async ({ update }) => { await update(); pending = null; };
+							}}>
+								<input type="hidden" name="userId" value={user.id} />
+								<button type="submit" class="btn-ghost text-xs text-rok-red inline-flex items-center gap-1.5" disabled={pending === `deactivate:${user.id}`}>
+									{#if pending === `deactivate:${user.id}`}<Spinner size={14} />{/if}
+									{t('au.deactivate')}
+								</button>
 							</form>
 						{/if}
 					</div>
