@@ -20,6 +20,7 @@
 		{ href: '/admin/mge-rewards', labelKey: 'auction.adminTab', adminOnly: true },
 		{ href: '/admin/users', labelKey: 'anav.users', adminOnly: true },
 		{ href: '/admin/accounts', labelKey: 'anav.accounts', adminOnly: true },
+		{ href: '/admin/donate', labelKey: 'adon.title', adminOnly: true },
 	];
 
 	let links = $derived(allLinks.filter((l) => !l.adminOnly || data.isSystemAdmin));

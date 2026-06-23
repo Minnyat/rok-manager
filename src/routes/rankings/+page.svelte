@@ -3,6 +3,7 @@
 	import { formatNumber, formatPower } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import { appTitle } from '$lib/config';
+	import KvkSelector from '$lib/components/KvkSelector.svelte';
 	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	interface Props {
@@ -17,6 +18,8 @@
 			totalPages: number;
 			total: number;
 			kvk: any;
+			kvks: any[];
+			selectedKvk: any;
 		};
 	}
 	let { data }: Props = $props();
@@ -99,6 +102,8 @@
 <svelte:head>
 	<title>{appTitle(t('rank.title'))}</title>
 </svelte:head>
+
+<KvkSelector kvks={data.kvks ?? []} selectedKvk={data.selectedKvk} />
 
 <div class="space-y-4">
 	<div class="flex items-center justify-between">

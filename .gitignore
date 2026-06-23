@@ -8,4 +8,6 @@ dist/
 !.env.example
 *.local
 *.csv
+*.log
+*.bak
 migrations/0001_initial.sql

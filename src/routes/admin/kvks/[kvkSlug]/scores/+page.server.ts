@@ -9,7 +9,12 @@ import {
 	validateParams,
 } from "$lib/server/formulas/registry";
 import { getKvks, getActiveVersionForKvk, updateKvk } from "$lib/server/kvk";
+import { isAdmin, isKingdomManager } from "$lib/server/permissions";
 import { t } from "$lib/i18n";
+
+function checkKvkAccess(user: App.Locals["user"], kvk: { kingdom_id: number | null }) {
+	return kvk.kingdom_id == null ? isAdmin(user) : isKingdomManager(user, kvk.kingdom_id);
+}
 
 // Import all formulas (auto-register)
 import "$lib/server/formulas/dkp";
@@ -110,10 +115,11 @@ export const actions: Actions = {
 	calculate: async ({ platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
-			.prepare("SELECT id FROM kvks WHERE slug = ?")
+			.prepare("SELECT id, kingdom_id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
-			.first<{ id: number }>();
+			.first<{ id: number; kingdom_id: number | null }>();
 		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
+		if (!checkKvkAccess(locals.user, kvk)) return fail(403, { error: t(locals.lang, "err.forbidden") });
 
 		const activeVersion = await getActiveVersionForKvk(db, kvk.id);
 		if (!activeVersion) return fail(400, { error: t(locals.lang, "err.noActiveVersion") });
@@ -125,10 +131,11 @@ export const actions: Actions = {
 	changeFormula: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
-			.prepare("SELECT id FROM kvks WHERE slug = ?")
+			.prepare("SELECT id, kingdom_id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
-			.first<{ id: number }>();
+			.first<{ id: number; kingdom_id: number | null }>();
 		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
+		if (!checkKvkAccess(locals.user, kvk)) return fail(403, { error: t(locals.lang, "err.forbidden") });
 
 		const formData = await request.formData();
 		const newFormulaId = formData.get("formulaType") as string;
@@ -176,11 +183,12 @@ export const actions: Actions = {
 		const db = getDb(platform);
 		const kvk = await db
 			.prepare(
-				"SELECT id, formula_type, formula_params FROM kvks WHERE slug = ?",
+				"SELECT id, kingdom_id, formula_type, formula_params FROM kvks WHERE slug = ?",
 			)
 			.bind(params.kvkSlug)
-			.first<{ id: number; formula_type: string; formula_params: string }>();
+			.first<{ id: number; kingdom_id: number | null; formula_type: string; formula_params: string }>();
 		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
+		if (!checkKvkAccess(locals.user, kvk)) return fail(403, { error: t(locals.lang, "err.forbidden") });
 
 		const formData = await request.formData();
 		const key = formData.get("key") as string;
@@ -228,10 +236,11 @@ export const actions: Actions = {
 	copyFormula: async ({ request, platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
-			.prepare("SELECT id FROM kvks WHERE slug = ?")
+			.prepare("SELECT id, kingdom_id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
-			.first<{ id: number }>();
+			.first<{ id: number; kingdom_id: number | null }>();
 		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
+		if (!checkKvkAccess(locals.user, kvk)) return fail(403, { error: t(locals.lang, "err.forbidden") });
 
 		const formData = await request.formData();
 		const fromKvkId = Number(formData.get("fromKvkId"));
@@ -263,10 +272,11 @@ export const actions: Actions = {
 	resetDefaults: async ({ platform, params, locals }) => {
 		const db = getDb(platform);
 		const kvk = await db
-			.prepare("SELECT id, formula_type FROM kvks WHERE slug = ?")
+			.prepare("SELECT id, kingdom_id, formula_type FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
-			.first<{ id: number; formula_type: string }>();
+			.first<{ id: number; kingdom_id: number | null; formula_type: string }>();
 		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
+		if (!checkKvkAccess(locals.user, kvk)) return fail(403, { error: t(locals.lang, "err.forbidden") });
 
 		const formulaId = kvk.formula_type ?? "dkp";
 		const defaultParams = getDefaultParams(formulaId);

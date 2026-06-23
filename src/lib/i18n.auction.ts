@@ -152,6 +152,8 @@ export const auctionVi: Record<string, string> = {
 	"auction.err.closed": "Phiên đã đóng",
 	"auction.err.tooLow": "Đơn giá quá thấp — tối thiểu {min}",
 	"auction.err.insufficient": "Không đủ xu — cần {needed}, bạn có {balance}",
+
+	"auction.export": "Xuất CSV",
 };
 
 export const auctionEn: Record<string, string> = {
@@ -302,4 +304,6 @@ export const auctionEn: Record<string, string> = {
 	"auction.err.closed": "The auction has closed",
 	"auction.err.tooLow": "Bid too low — minimum {min}",
 	"auction.err.insufficient": "Not enough coins — need {needed}, you have {balance}",
+
+	"auction.export": "Export CSV",
 };

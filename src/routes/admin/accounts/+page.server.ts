@@ -1,9 +1,11 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { getDb } from '$lib/server/db';
 import { calculateScores } from '$lib/server/scores';
+import { isAdmin } from '$lib/server/permissions';
 
-export const load: PageServerLoad = async ({ platform }) => {
+export const load: PageServerLoad = async ({ platform, locals }) => {
+	if (!isAdmin(locals.user)) throw redirect(303, '/dashboard');
 	const db = getDb(platform);
 
 	const links = await db
@@ -28,7 +30,8 @@ export const load: PageServerLoad = async ({ platform }) => {
 };
 
 export const actions: Actions = {
-	resolve: async ({ request, platform }) => {
+	resolve: async ({ request, platform, locals }) => {
+		if (!isAdmin(locals.user)) return fail(403, { error: 'Forbidden' });
 		const form = await request.formData();
 		const reportId = Number(form.get('reportId'));
 		const action = String(form.get('action'));
@@ -46,7 +49,8 @@ export const actions: Actions = {
 		return { updated: true };
 	},
 
-	unlink: async ({ request, platform }) => {
+	unlink: async ({ request, platform, locals }) => {
+		if (!isAdmin(locals.user)) return fail(403, { error: 'Forbidden' });
 		const form = await request.formData();
 		const linkId = Number(form.get('linkId'));
 		if (!linkId) return fail(400, { error: 'Invalid link ID' });

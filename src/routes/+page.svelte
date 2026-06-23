@@ -22,13 +22,26 @@
 				data.user.kingdomRole === 'r4')
 	);
 
-	let features = $derived([
+	// Player-centric features (your account, score, ranking, profile)
+	let playerFeatures = $derived([
 		{ icon: '🔗', title: tr(lang, 'landing.f1Title'), desc: tr(lang, 'landing.f1Desc') },
 		{ icon: '📊', title: tr(lang, 'landing.f2Title'), desc: tr(lang, 'landing.f2Desc') },
 		{ icon: '🏆', title: tr(lang, 'landing.f3Title'), desc: tr(lang, 'landing.f3Desc') },
-		{ icon: '👤', title: tr(lang, 'landing.f4Title'), desc: tr(lang, 'landing.f4Desc') },
+		{ icon: '👤', title: tr(lang, 'landing.f4Title'), desc: tr(lang, 'landing.f4Desc') }
+	]);
+
+	// Kingdom-level systems (transfer, fairness, auction)
+	let kingdomFeatures = $derived([
 		{ icon: '🔄', title: tr(lang, 'landing.f5Title'), desc: tr(lang, 'landing.f5Desc') },
-		{ icon: '⚖️', title: tr(lang, 'landing.f6Title'), desc: tr(lang, 'landing.f6Desc') }
+		{ icon: '⚖️', title: tr(lang, 'landing.f6Title'), desc: tr(lang, 'landing.f6Desc') },
+		{ icon: '🔨', title: tr(lang, 'landing.f7Title'), desc: tr(lang, 'landing.f7Desc') }
+	]);
+
+	// Management tools for King & R4 (members, KvK seasons, auctions)
+	let managerFeatures = $derived([
+		{ icon: '👥', title: tr(lang, 'landing.f8Title'), desc: tr(lang, 'landing.f8Desc') },
+		{ icon: '📋', title: tr(lang, 'landing.f9Title'), desc: tr(lang, 'landing.f9Desc') },
+		{ icon: '🪙', title: tr(lang, 'landing.f10Title'), desc: tr(lang, 'landing.f10Desc') }
 	]);
 
 	let steps = $derived([
@@ -98,6 +111,16 @@
 				</a>
 			{/if}
 		</div>
+
+		<!-- Donate nudge -->
+		<a href="/donate" class="mt-4 flex items-center gap-3 rounded-xl border border-rok-border/50 bg-rok-surface/40 px-4 py-3 hover:border-rok-accent/30 hover:bg-rok-surface transition-colors group text-left">
+			<span class="text-xl">☕</span>
+			<div class="flex-1 min-w-0">
+				<p class="text-sm font-medium group-hover:text-rok-accent transition-colors">{T('don.title')}</p>
+				<p class="text-xs text-rok-dim truncate">{T('don.subtitle')}</p>
+			</div>
+			<span class="text-rok-dim text-sm shrink-0">→</span>
+		</a>
 	</div>
 {:else}
 	<!-- Public landing -->
@@ -206,21 +229,43 @@
 		</section>
 
 		<!-- Features -->
+		{#snippet featureCard(f: { icon: string; title: string; desc: string })}
+			<div class="card hover:border-rok-accent/40 hover:-translate-y-0.5 transition-all duration-200">
+				<div class="w-11 h-11 rounded-xl bg-rok-accent/10 border border-rok-accent/20 flex items-center justify-center text-xl mb-3">
+					{f.icon}
+				</div>
+				<h4 class="font-semibold mb-1">{f.title}</h4>
+				<p class="text-sm text-rok-muted leading-relaxed">{f.desc}</p>
+			</div>
+		{/snippet}
+
 		<section id="features" class="py-12 scroll-mt-20">
 			<div class="text-center mb-8">
 				<h2 class="text-2xl md:text-3xl font-bold">{T('landing.featuresTitle')}</h2>
 				<p class="text-rok-muted mt-2">{T('landing.featuresSub')}</p>
 			</div>
 
-			<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-				{#each features as f}
-					<div class="card hover:border-rok-accent/40 hover:-translate-y-0.5 transition-all duration-200">
-						<div class="w-11 h-11 rounded-xl bg-rok-accent/10 border border-rok-accent/20 flex items-center justify-center text-xl mb-3">
-							{f.icon}
-						</div>
-						<h3 class="font-semibold mb-1">{f.title}</h3>
-						<p class="text-sm text-rok-muted leading-relaxed">{f.desc}</p>
-					</div>
+			<!-- For players -->
+			<h3 class="text-xs font-semibold uppercase tracking-wider text-rok-dim mb-3">{T('landing.featuresGroup1')}</h3>
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+				{#each playerFeatures as f}
+					{@render featureCard(f)}
+				{/each}
+			</div>
+
+			<!-- Kingdom systems -->
+			<h3 class="text-xs font-semibold uppercase tracking-wider text-rok-dim mt-8 mb-3">{T('landing.featuresGroup2')}</h3>
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+				{#each kingdomFeatures as f}
+					{@render featureCard(f)}
+				{/each}
+			</div>
+
+			<!-- For King & R4 -->
+			<h3 class="text-xs font-semibold uppercase tracking-wider text-rok-dim mt-8 mb-3">{T('landing.featuresGroup3')}</h3>
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+				{#each managerFeatures as f}
+					{@render featureCard(f)}
 				{/each}
 			</div>
 		</section>
@@ -253,9 +298,20 @@
 			</div>
 		</section>
 
-		<footer class="py-8 text-center text-xs text-rok-dim border-t border-rok-border/60">
-			⚔️ {config.kingdomName} · {T('landing.tagline')}
-		</footer>
+		<!-- Donate strip -->
+		<section class="py-6">
+			<a href="/donate" class="flex items-center justify-between gap-4 rounded-xl border border-rok-border/60 bg-rok-surface/50 px-5 py-4 hover:border-rok-accent/40 hover:bg-rok-surface transition-colors group">
+				<div class="flex items-center gap-3">
+					<span class="text-2xl">☕</span>
+					<div>
+						<p class="font-medium text-sm group-hover:text-rok-accent transition-colors">{T('don.title')}</p>
+						<p class="text-xs text-rok-dim leading-snug max-w-xs">{T('don.subtitle')}</p>
+					</div>
+				</div>
+				<span class="text-rok-dim text-sm shrink-0 group-hover:text-rok-accent transition-colors">→</span>
+			</a>
+		</section>
+
 	</div>
 {/if}
 

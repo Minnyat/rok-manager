@@ -93,10 +93,10 @@
 	});
 </script>
 
-<svelte:head><title>{t('auction.title')}</title></svelte:head>
+<svelte:head><title>{auction?.title ?? t('auction.title')}</title></svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-5">
-	<h1 class="text-xl font-bold">{t('auction.title')}</h1>
+	<h1 class="text-xl font-bold">{auction?.title ?? t('auction.title')}</h1>
 
 	{#if !liveView}
 		<div class="card text-center py-8 text-rok-muted text-sm">{t('auction.none')}</div>
@@ -221,7 +221,7 @@
 								{@const res = data.reveal.results.find((x: any) => x.user_id === r.user_id)}
 								<tr class="border-b border-rok-border/50">
 									<td class="py-1.5 px-2">{res ? res.rank : '—'}</td>
-									<td class="py-1.5 px-2 text-rok-text">{r.username} <span class="text-rok-dim text-xs">#{r.governor_id}</span></td>
+									<td class="py-1.5 px-2 text-rok-text">{r.display_name} <span class="text-rok-dim text-xs">#{r.governor_id}</span></td>
 									<td class="py-1.5 px-2 text-right">{formatNumber(r.unit_price)}</td>
 									<td class="py-1.5 px-2 text-right">{res ? res.sculptures : 0}</td>
 									<td class="py-1.5 px-2 text-right text-rok-accent">{res ? formatNumber(res.total_cost) : '—'}</td>

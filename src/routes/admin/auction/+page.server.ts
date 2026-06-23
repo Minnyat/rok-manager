@@ -51,11 +51,19 @@ export const load: PageServerLoad = async ({ platform, locals }) => {
 			const rows = await db
 				.prepare(
 					`SELECT r.id, r.user_id, r.governor_id, r.rank, r.sculptures, r.unit_paid,
-					        r.total_cost, r.status, u.username
-					 FROM auction_results r JOIN users u ON u.id = r.user_id
+					        r.total_cost, r.status,
+					        COALESCE(pd.governor_name, u.username) AS display_name
+					 FROM auction_results r
+					 JOIN users u ON u.id = r.user_id
+					 LEFT JOIN player_data pd ON pd.governor_id = r.governor_id
+					   AND pd.version_id = (
+					     SELECT active_version_id FROM kvks
+					     WHERE kingdom_id = ? AND active_version_id IS NOT NULL
+					     ORDER BY id DESC LIMIT 1
+					   )
 					 WHERE r.auction_id = ? ORDER BY r.rank ASC`,
 				)
-				.bind(auction.id)
+				.bind(kingdomId, auction.id)
 				.all();
 			results = rows.results;
 		}

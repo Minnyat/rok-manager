@@ -73,7 +73,7 @@
 			<a href="/accounts" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.accounts')}</a>
 			<a href="/rankings" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.rankings')}</a>
 			<a href="/auction" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>{t(lang, 'nav.auction')}</a>
-			<a href="/settings" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>⚙️ {t(lang, 'nav.settings')}</a>
+				<a href="/settings" class="block py-2 text-sm" onclick={() => (menuOpen = false)}>⚙️ {t(lang, 'nav.settings')}</a>
 			{#if canManage}
 				<a href="/admin" class="block py-2 text-sm text-rok-accent" onclick={() => (menuOpen = false)}>{t(lang, 'nav.admin')}</a>
 			{/if}

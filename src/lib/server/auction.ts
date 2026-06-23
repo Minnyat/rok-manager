@@ -673,7 +673,7 @@ export async function getAuctionView(
 }
 
 export interface RevealRow extends RankedBid {
-	username: string;
+	display_name: string;
 }
 
 /** Full identities + bids, only meaningful after the auction has closed. */
@@ -685,21 +685,47 @@ export async function getPublicReveal(
 	const dkpByGov = await getDkpByGovernor(db, auction);
 	const ranked = rankBids(bids, dkpByGov);
 
-	const userIds = ranked.map((r) => r.user_id);
-	const nameById = new Map<number, string>();
-	if (userIds.length) {
+	// Look up governor names from the latest KvK for this kingdom
+	const govIds = ranked
+		.map((r) => r.governor_id)
+		.filter((id): id is number => id != null);
+	const nameByGovId = new Map<number, string>();
+	if (govIds.length) {
 		const rows = await db
 			.prepare(
-				`SELECT id, username FROM users WHERE id IN (${userIds.map(() => "?").join(",")})`,
+				`SELECT pd.governor_id, pd.governor_name
+				 FROM player_data pd
+				 JOIN kvks k ON k.active_version_id = pd.version_id
+				 WHERE k.kingdom_id = ?
+				   AND pd.governor_id IN (${govIds.map(() => "?").join(",")})
+				   AND k.id = (SELECT MAX(id) FROM kvks WHERE kingdom_id = ? AND active_version_id IS NOT NULL)`,
 			)
-			.bind(...userIds)
+			.bind(auction.kingdom_id, ...govIds, auction.kingdom_id)
+			.all<{ governor_id: number; governor_name: string }>();
+		for (const u of rows.results) nameByGovId.set(u.governor_id, u.governor_name);
+	}
+
+	// Fallback to username for anyone not found in KvK player data
+	const fallbackUserIds = ranked
+		.filter((r) => r.governor_id == null || !nameByGovId.has(r.governor_id))
+		.map((r) => r.user_id);
+	const usernameById = new Map<number, string>();
+	if (fallbackUserIds.length) {
+		const rows = await db
+			.prepare(
+				`SELECT id, username FROM users WHERE id IN (${fallbackUserIds.map(() => "?").join(",")})`,
+			)
+			.bind(...fallbackUserIds)
 			.all<{ id: number; username: string }>();
-		for (const u of rows.results) nameById.set(u.id, u.username);
+		for (const u of rows.results) usernameById.set(u.id, u.username);
 	}
 
 	const revealed: RevealRow[] = ranked.map((r) => ({
 		...r,
-		username: nameById.get(r.user_id) ?? `#${r.user_id}`,
+		display_name:
+			(r.governor_id != null ? nameByGovId.get(r.governor_id) : undefined) ??
+			usernameById.get(r.user_id) ??
+			`#${r.user_id}`,
 	}));
 
 	// Stored results if settled, else freshly computed preview.

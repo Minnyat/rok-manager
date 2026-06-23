@@ -5,6 +5,7 @@ import { parseCSV, insertPlayerData } from "$lib/server/csv";
 import { setActiveVersionForKvk } from "$lib/server/kvk";
 import { getKingdomStorage } from "$lib/server/kingdom";
 import { calculateScores } from "$lib/server/scores";
+import { isAdmin, isKingdomManager } from "$lib/server/permissions";
 import { t } from "$lib/i18n";
 
 export const load: PageServerLoad = async ({ platform, parent }) => {
@@ -31,6 +32,8 @@ export const actions: Actions = {
 			.bind(params.kvkSlug)
 			.first<{ id: number; slug: string; kingdom_id: number | null }>();
 		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
+		const allowed = kvk.kingdom_id == null ? isAdmin(locals.user) : isKingdomManager(locals.user, kvk.kingdom_id);
+		if (!allowed) return fail(403, { error: t(locals.lang, "err.forbidden") });
 
 		const form = await request.formData();
 		const file = form.get("file") as File;

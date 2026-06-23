@@ -11,6 +11,43 @@
 	let adjustingId = $state<number | null>(null);
 	let cancellingId = $state<number | null>(null);
 
+	function downloadCsv(headers: string[], rows: (string | number)[][], filename: string) {
+		const escape = (v: string | number) => {
+			const s = String(v ?? '');
+			return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+		};
+		const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\r\n');
+		const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url; a.download = filename; a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function exportLive() {
+		if (!live || !data.reveal) return;
+		const headers = ['Rank', 'Name', 'Governor ID', 'Unit Price', 'Sculptures', 'Will Pay'];
+		const rows = (data.reveal.ranked ?? []).map((r: any, i: number) => {
+			const res = data.reveal.results.find((x: any) => x.user_id === r.user_id);
+			return [
+				i + 1 <= live.max_rank ? i + 1 : '',
+				r.display_name,
+				r.governor_id,
+				r.unit_price,
+				res ? res.sculptures : 0,
+				res ? res.total_cost : '',
+			];
+		});
+		downloadCsv(headers, rows, `auction_${live.title.replace(/\s+/g, '_')}_live.csv`);
+	}
+
+	function exportResults() {
+		if (!data.results?.length) return;
+		const headers = ['Rank', 'Name', 'Governor ID', 'Sculptures', 'Paid', 'Status'];
+		const rows = data.results.map((r: any) => [r.rank, r.display_name, r.governor_id, r.sculptures, r.total_cost, r.status]);
+		downloadCsv(headers, rows, `auction_results.csv`);
+	}
+
 	const liveStatuses = ['draft', 'open', 'closed'];
 	let live = $derived(data.auction && liveStatuses.includes(data.auction.status) ? data.auction : null);
 	let canCreate = $derived(!data.auction || ['settled', 'cancelled'].includes(data.auction.status));
@@ -72,8 +109,13 @@
 						{live.title}
 						<span class="ml-2 text-xs px-2 py-0.5 rounded bg-rok-surface text-rok-accent">{t('auction.status.' + live.status)}</span>
 					</h2>
-					<div class="text-xs text-rok-dim">
-						{t('auction.opensAt')}: {fmtUtc(live.opens_at)} · {t('auction.closesAt')}: {fmtUtc(live.closes_at)}
+					<div class="flex items-center gap-3 flex-wrap">
+						<div class="text-xs text-rok-dim">
+							{t('auction.opensAt')}: {fmtUtc(live.opens_at)} · {t('auction.closesAt')}: {fmtUtc(live.closes_at)}
+						</div>
+						{#if (data.reveal?.ranked ?? []).length > 0}
+							<button type="button" class="btn-ghost text-xs" onclick={exportLive}>{t('auction.export')}</button>
+						{/if}
 					</div>
 				</div>
 
@@ -109,7 +151,7 @@
 								{@const res = data.reveal.results.find((x: any) => x.user_id === r.user_id)}
 								<tr class="border-b border-rok-border/50">
 									<td class="py-1.5 px-2">{i + 1 <= live.max_rank ? i + 1 : '—'}</td>
-									<td class="py-1.5 px-2 text-rok-text">{r.username} <span class="text-rok-dim text-xs">#{r.governor_id}</span></td>
+									<td class="py-1.5 px-2 text-rok-text">{r.display_name} <span class="text-rok-dim text-xs">#{r.governor_id}</span></td>
 									<td class="py-1.5 px-2 text-right">{formatNumber(r.unit_price)}</td>
 									<td class="py-1.5 px-2 text-right">{res ? res.sculptures : 0}</td>
 									<td class="py-1.5 px-2 text-right text-rok-accent">{res ? formatNumber(res.total_cost) : '—'}</td>
@@ -127,7 +169,10 @@
 		<!-- 4. Settled results management -->
 		{#if data.results?.length}
 			<div class="card space-y-3">
-				<h2 class="text-sm font-medium text-rok-muted">{t('auction.results.title')}</h2>
+				<div class="flex items-center justify-between gap-2">
+					<h2 class="text-sm font-medium text-rok-muted">{t('auction.results.title')}</h2>
+					<button type="button" class="btn-ghost text-xs" onclick={exportResults}>{t('auction.export')}</button>
+				</div>
 				<div class="overflow-x-auto">
 					<table class="w-full text-sm">
 						<thead>
@@ -144,7 +189,7 @@
 							{#each data.results as r}
 								<tr class="border-b border-rok-border/50" class:opacity-50={r.status === 'cancelled'}>
 									<td class="py-1.5 px-2">{r.rank}</td>
-									<td class="py-1.5 px-2 text-rok-text">{r.username} <span class="text-rok-dim text-xs">#{r.governor_id}</span></td>
+									<td class="py-1.5 px-2 text-rok-text">{r.display_name} <span class="text-rok-dim text-xs">#{r.governor_id}</span></td>
 									<td class="py-1.5 px-2 text-right">{r.sculptures}</td>
 									<td class="py-1.5 px-2 text-right text-rok-accent">{formatNumber(r.total_cost)}</td>
 									<td class="py-1.5 px-2">{t('auction.rstatus.' + r.status)}</td>

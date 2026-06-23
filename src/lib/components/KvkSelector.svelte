@@ -8,11 +8,17 @@
 	}
 	let { kvks, selectedKvk }: Props = $props();
 
+	// Pages that don't use kvkId — switching KvK on these has no effect so we navigate to their base path
+	const KVK_AGNOSTIC = ['/auction'];
+
 	async function switchKvk(kvkId: number) {
 		const url = new URL($page.url);
-		url.searchParams.set('kvkId', String(kvkId));
-		// Reset page to 1 when switching KvK
-		url.searchParams.delete('page');
+		if (KVK_AGNOSTIC.some(p => url.pathname === p || url.pathname.startsWith(p + '/'))) {
+			url.search = '';
+		} else {
+			url.searchParams.set('kvkId', String(kvkId));
+			url.searchParams.delete('page');
+		}
 		await goto(url.toString(), { invalidateAll: true });
 	}
 </script>
