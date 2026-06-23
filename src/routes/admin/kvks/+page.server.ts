@@ -3,10 +3,13 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
 import { getKvks, createKvk, getKvkStats } from "$lib/server/kvk";
 import { seedScoringConfigForKvk } from "$lib/server/scoring-config";
+import { t } from "$lib/i18n";
 
-export const load: PageServerLoad = async ({ platform }) => {
+export const load: PageServerLoad = async ({ platform, locals }) => {
 	const db = getDb(platform);
-	const kvks = await getKvks(db);
+	// System admin (kingdomId null) sees all; King/R4 see only their kingdom.
+	const kingdomId = locals.user?.role === "admin" ? null : locals.user?.kingdomId ?? null;
+	const kvks = await getKvks(db, kingdomId);
 
 	// Load stats for each KvK
 	const kvkStats = await Promise.all(kvks.map((k) => getKvkStats(db, k.id)));
@@ -22,7 +25,7 @@ export const actions: Actions = {
 		const name = String(form.get("name") || "").trim();
 		const description = String(form.get("description") || "").trim() || null;
 
-		if (!name) return fail(400, { error: "Tên KvK không được để trống" });
+		if (!name) return fail(400, { error: t(locals.lang, "err.kvkNameEmpty") });
 
 		// Generate slug from name
 		const slug = name
@@ -41,7 +44,7 @@ export const actions: Actions = {
 			.first();
 		if (existingName) {
 			return fail(400, {
-				error: `Tên KvK "${name}" đã tồn tại. Chọn tên khác.`,
+				error: t(locals.lang, "err.kvkNameExists", { name }),
 			});
 		}
 
@@ -51,15 +54,20 @@ export const actions: Actions = {
 			.bind(slug)
 			.first();
 		if (existing) {
-			return fail(400, { error: `Slug "${slug}" đã tồn tại. Chọn tên khác.` });
+			return fail(400, { error: t(locals.lang, "err.kvkSlugExists", { slug }) });
 		}
 
+		// Scope the new KvK to the creator's kingdom (null for system admin —
+		// admins create KvKs from a kingdom detail page in the admin area).
+		const kingdomId =
+			locals.user.role === "admin" ? null : locals.user.kingdomId ?? null;
 		const kvkId = await createKvk(
 			db,
 			name,
 			slug || `kvk-${Date.now()}`,
 			description,
 			locals.user.id,
+			kingdomId,
 		);
 
 		// Seed scoring config from global defaults

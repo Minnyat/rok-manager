@@ -14,13 +14,27 @@ export interface KvK {
 	active_version_id: number | null;
 	formula_type: string;
 	formula_params: string; // JSON string
+	kingdom_id: number | null;
 	created_by: number | null;
 	created_at: number;
 	updated_at: number;
 }
 
-/** List all KvKs, ordered by most recent first. */
-export async function getKvks(db: D1Database): Promise<KvK[]> {
+/**
+ * List KvKs, newest first. Pass `kingdomId` to scope to one kingdom (the normal
+ * case); omit it (or pass null) for the admin cross-kingdom view.
+ */
+export async function getKvks(
+	db: D1Database,
+	kingdomId?: number | null,
+): Promise<KvK[]> {
+	if (kingdomId != null) {
+		const rows = await db
+			.prepare("SELECT * FROM kvks WHERE kingdom_id = ? ORDER BY created_at DESC")
+			.bind(kingdomId)
+			.all<KvK>();
+		return rows.results;
+	}
 	const rows = await db
 		.prepare("SELECT * FROM kvks ORDER BY created_at DESC")
 		.all<KvK>();
@@ -47,10 +61,21 @@ export async function getKvkBySlug(
 }
 
 /**
- * Get the "default" KvK — the newest one by creation date.
- * Users can switch to other KvKs via the KvK selector.
+ * Get the "default" KvK — the newest one by creation date, scoped to a kingdom
+ * when `kingdomId` is given. Users can switch to other KvKs via the KvK selector.
  */
-export async function getDefaultKvk(db: D1Database): Promise<KvK | null> {
+export async function getDefaultKvk(
+	db: D1Database,
+	kingdomId?: number | null,
+): Promise<KvK | null> {
+	if (kingdomId != null) {
+		return db
+			.prepare(
+				"SELECT * FROM kvks WHERE kingdom_id = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.bind(kingdomId)
+			.first<KvK>();
+	}
 	return db
 		.prepare("SELECT * FROM kvks ORDER BY created_at DESC LIMIT 1")
 		.first<KvK>();
@@ -60,22 +85,24 @@ export async function getDefaultKvk(db: D1Database): Promise<KvK | null> {
  * Resolve which KvK the user is currently viewing.
  *
  * Priority:
- * 1. `?kvkId=` query param
- * 2. Default KvK (Legacy or first active)
+ * 1. `?kvkId=` query param (must belong to the user's kingdom when scoped)
+ * 2. Default KvK for the kingdom
  */
 export async function getSelectedKvk(
 	db: D1Database,
 	url: URL,
+	kingdomId?: number | null,
 ): Promise<KvK | null> {
 	const paramId = url.searchParams.get("kvkId");
 	if (paramId) {
 		const id = Number(paramId);
 		if (!isNaN(id) && id > 0) {
 			const kvk = await getKvkById(db, id);
-			if (kvk) return kvk;
+			// Enforce tenant scope: ignore a KvK outside the user's kingdom.
+			if (kvk && (kingdomId == null || kvk.kingdom_id === kingdomId)) return kvk;
 		}
 	}
-	return getDefaultKvk(db);
+	return getDefaultKvk(db, kingdomId);
 }
 
 /**
@@ -127,13 +154,14 @@ export async function createKvk(
 	slug: string,
 	description: string | null,
 	userId: number,
+	kingdomId: number | null = null,
 ): Promise<number> {
 	const result = await db
 		.prepare(
-			`INSERT INTO kvks (name, slug, description, status, formula_type, formula_params, created_by, created_at, updated_at)
-			 VALUES (?, ?, ?, 'draft', 'dkp', '{}', ?, unixepoch(), unixepoch())`,
+			`INSERT INTO kvks (name, slug, description, status, formula_type, formula_params, kingdom_id, created_by, created_at, updated_at)
+			 VALUES (?, ?, ?, 'draft', 'dkp', '{}', ?, ?, unixepoch(), unixepoch())`,
 		)
-		.bind(name, slug, description, userId)
+		.bind(name, slug, description, kingdomId, userId)
 		.run();
 	return result.meta.last_row_id as number;
 }

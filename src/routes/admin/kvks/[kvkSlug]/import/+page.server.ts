@@ -3,7 +3,9 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
 import { parseCSV, insertPlayerData } from "$lib/server/csv";
 import { setActiveVersionForKvk } from "$lib/server/kvk";
+import { getKingdomStorage } from "$lib/server/kingdom";
 import { calculateScores } from "$lib/server/scores";
+import { t } from "$lib/i18n";
 
 export const load: PageServerLoad = async ({ platform, parent }) => {
 	const db = getDb(platform);
@@ -25,10 +27,10 @@ export const actions: Actions = {
 
 		const db = getDb(platform);
 		const kvk = await db
-			.prepare("SELECT id, slug FROM kvks WHERE slug = ?")
+			.prepare("SELECT id, slug, kingdom_id FROM kvks WHERE slug = ?")
 			.bind(params.kvkSlug)
-			.first<{ id: number; slug: string }>();
-		if (!kvk) return fail(404, { error: "Không tìm thấy KvK" });
+			.first<{ id: number; slug: string; kingdom_id: number | null }>();
+		if (!kvk) return fail(404, { error: t(locals.lang, "err.kvkNotFound") });
 
 		const form = await request.formData();
 		const file = form.get("file") as File;
@@ -37,27 +39,44 @@ export const actions: Actions = {
 		const calculateAfterImport = form.get("calculate") === "on";
 
 		if (!file || !file.size)
-			return fail(400, { error: "Vui lòng chọn file CSV" });
+			return fail(400, { error: t(locals.lang, "err.selectCsv") });
 		if (!versionName)
-			return fail(400, { error: "Vui lòng nhập tên phiên bản" });
+			return fail(400, { error: t(locals.lang, "err.enterVersionName") });
 
 		const csvText = await file.text();
 		const { rows, errors, warnings } = parseCSV(csvText);
 
 		if (errors.length > 0) {
 			return fail(400, {
-				error: `Lỗi parse CSV: ${errors.slice(0, 3).join("; ")}`,
+				error: t(locals.lang, "err.csvParse", { detail: errors.slice(0, 3).join("; ") }),
 			});
 		}
 		if (rows.length === 0) {
-			return fail(400, { error: "Không có dữ liệu hợp lệ trong file" });
+			return fail(400, { error: t(locals.lang, "err.noValidData") });
+		}
+
+		// Storage quota enforcement (per kingdom, measured in MB of CSV bytes).
+		const sizeBytes = new TextEncoder().encode(csvText).length;
+		if (kvk.kingdom_id) {
+			const storage = await getKingdomStorage(db, kvk.kingdom_id);
+			if (storage.usedBytes + sizeBytes > storage.quotaBytes) {
+				const usedMb = (storage.usedBytes / (1024 * 1024)).toFixed(1);
+				const fileMb = (sizeBytes / (1024 * 1024)).toFixed(2);
+				return fail(400, {
+					error: t(locals.lang, "err.storageLimit", {
+						quota: storage.quotaMb,
+						used: usedMb,
+						file: fileMb,
+					}),
+				});
+			}
 		}
 
 		const version = await db
 			.prepare(
-				"INSERT INTO data_versions (name, filename, row_count, imported_by, kvk_id) VALUES (?, ?, ?, ?, ?)",
+				"INSERT INTO data_versions (name, filename, row_count, size_bytes, imported_by, kvk_id) VALUES (?, ?, ?, ?, ?, ?)",
 			)
-			.bind(versionName, file.name, rows.length, locals.user.id, kvk.id)
+			.bind(versionName, file.name, rows.length, sizeBytes, locals.user.id, kvk.id)
 			.run();
 
 		const versionId = version.meta.last_row_id as number;

@@ -2,19 +2,20 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { verifyPassword, createSession } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
+import { t } from '$lib/i18n';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) throw redirect(303, '/dashboard');
 };
 
 export const actions: Actions = {
-	default: async ({ request, platform, cookies }) => {
+	default: async ({ request, platform, cookies, locals }) => {
 		const form = await request.formData();
 		const username = String(form.get('username') || '').trim().toLowerCase();
 		const password = String(form.get('password') || '');
 
 		if (!username || !password) {
-			return fail(400, { error: 'Vui lòng nhập đầy đủ thông tin', username });
+			return fail(400, { error: t(locals.lang, 'err.enterAllInfo'), username });
 		}
 
 		const db = getDb(platform);
@@ -24,12 +25,12 @@ export const actions: Actions = {
 			.first<{ id: number; password_hash: string; is_active: number }>();
 
 		if (!user || !user.is_active || !user.password_hash) {
-			return fail(400, { error: 'Sai tài khoản hoặc mật khẩu', username });
+			return fail(400, { error: t(locals.lang, 'err.wrongCredentials'), username });
 		}
 
 		const valid = await verifyPassword(password, user.password_hash);
 		if (!valid) {
-			return fail(400, { error: 'Sai tài khoản hoặc mật khẩu', username });
+			return fail(400, { error: t(locals.lang, 'err.wrongCredentials'), username });
 		}
 
 		const sessionId = await createSession(db, user.id);

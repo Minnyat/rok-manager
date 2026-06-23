@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/stores';
+	import { getContext } from 'svelte';
+	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
 
 	interface Props {
 		children: Snippet;
@@ -14,11 +16,11 @@
 	const basePath = $derived(`/admin/kvks/${data.kvk.slug}`);
 
 	const links = [
-		{ href: '', label: 'Tổng quan' },
-		{ href: '/scores', label: 'Scores' },
-		{ href: '/bonuses', label: 'Bonus' },
-		{ href: '/import', label: 'Import' },
-		{ href: '/versions', label: 'Versions' },
+		{ href: '', labelKey: 'kvkn.overview' },
+		{ href: '/scores', labelKey: 'kvkn.scores' },
+		{ href: '/bonuses', labelKey: 'kvkn.bonus' },
+		{ href: '/import', labelKey: 'kvkn.import' },
+		{ href: '/versions', labelKey: 'kvkn.versions' },
 	];
 </script>
 
@@ -44,7 +46,7 @@
 				class="px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors
 					{$page.url.pathname === href ? 'bg-rok-accent text-rok-bg font-medium' : 'text-rok-muted hover:bg-rok-surface'}"
 			>
-				{link.label}
+				{t(link.labelKey)}
 			</a>
 		{/each}
 	</nav>

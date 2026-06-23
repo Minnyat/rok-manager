@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { formatPower } from '$lib/utils';
 	import Modal from '$lib/components/Modal.svelte';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import { getContext } from 'svelte';
 	import { appTitle } from '$lib/config';
 	const t: (key: string, params?: Record<string, string | number>) => string = getContext('t');
@@ -16,10 +17,13 @@
 	let reportGovernorId = $state(0);
 	let reportGovernorName = $state('');
 	let loading = $state(false);
+	let reporting = $state(false);
+	let removingId = $state<number | null>(null);
 
 	let query = $state(form?.query ?? '');
 	let suggestions = $state<any[]>([]);
 	let showSuggestions = $state(false);
+	let searching = $state(false);
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	async function onInput() {
@@ -27,9 +31,11 @@
 		if (q.length < 2) {
 			suggestions = [];
 			showSuggestions = false;
+			searching = false;
 			return;
 		}
 		if (debounceTimer) clearTimeout(debounceTimer);
+		searching = true;
 		debounceTimer = setTimeout(async () => {
 			try {
 				const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`);
@@ -39,6 +45,8 @@
 			} catch {
 				suggestions = [];
 				showSuggestions = false;
+			} finally {
+				searching = false;
 			}
 		}, 250);
 	}
@@ -92,20 +100,28 @@
 		}}>
 			<div class="relative">
 				<div class="flex gap-2">
-					<input
-						name="query"
-						type="text"
-						class="input flex-1"
-						placeholder={t('acc.placeholder')}
-						bind:value={query}
-						oninput={onInput}
-						onfocus={() => { if (suggestions.length > 0) showSuggestions = true; }}
-					onblur={() => { setTimeout(() => (showSuggestions = false), 200); }}
-						autocomplete="off"
-						required
-					/>
-					<button type="submit" class="btn-primary whitespace-nowrap" disabled={loading}>
-						{loading ? '...' : t('acc.add')}
+					<div class="relative flex-1">
+						<input
+							name="query"
+							type="text"
+							class="input w-full pr-9"
+							placeholder={t('acc.placeholder')}
+							bind:value={query}
+							oninput={onInput}
+							onfocus={() => { if (suggestions.length > 0) showSuggestions = true; }}
+						onblur={() => { setTimeout(() => (showSuggestions = false), 200); }}
+							autocomplete="off"
+							required
+						/>
+						{#if searching}
+							<div class="absolute right-3 top-1/2 -translate-y-1/2 text-rok-muted">
+								<Spinner size={16} />
+							</div>
+						{/if}
+					</div>
+					<button type="submit" class="btn-primary whitespace-nowrap inline-flex items-center gap-1.5" disabled={loading}>
+						{#if loading}<Spinner size={16} />{/if}
+						{t('acc.add')}
 					</button>
 				</div>
 
@@ -141,9 +157,18 @@
 						<p class="font-medium">{acc.governor_name}</p>
 						<p class="text-xs text-rok-dim">ID: {acc.governorId} • Power: {formatPower(acc.power || 0)}</p>
 					</div>
-					<form method="POST" action="?/remove">
+					<form method="POST" action="?/remove" use:enhance={() => {
+						removingId = acc.linkId;
+						return async ({ update }) => {
+							await update();
+							removingId = null;
+						};
+					}}>
 						<input type="hidden" name="linkId" value={acc.linkId} />
-						<button type="submit" class="btn-ghost text-rok-red text-sm">{t('acc.remove')}</button>
+						<button type="submit" class="btn-ghost text-rok-red text-sm inline-flex items-center gap-1.5" disabled={removingId === acc.linkId}>
+							{#if removingId === acc.linkId}<Spinner size={14} />{/if}
+							{t('acc.remove')}
+						</button>
 					</form>
 				</div>
 			{/each}
@@ -162,7 +187,9 @@
 		{t('acc.reportDesc', { name: reportGovernorName })}
 	</p>
 	<form method="POST" action="?/report" use:enhance={() => {
+		reporting = true;
 		return async ({ update }) => {
+			reporting = false;
 			reportOpen = false;
 			await update();
 		};
@@ -170,8 +197,11 @@
 		<input type="hidden" name="governorId" value={reportGovernorId} />
 		<textarea name="message" class="input mb-3" rows={3} placeholder={t('acc.reportPlaceholder')}></textarea>
 		<div class="flex gap-2 justify-end">
-			<button type="button" class="btn-secondary" onclick={() => (reportOpen = false)}>{t('acc.reportCancel')}</button>
-			<button type="submit" class="btn-primary">{t('acc.reportSubmit')}</button>
+			<button type="button" class="btn-secondary" onclick={() => (reportOpen = false)} disabled={reporting}>{t('acc.reportCancel')}</button>
+			<button type="submit" class="btn-primary inline-flex items-center gap-1.5" disabled={reporting}>
+				{#if reporting}<Spinner size={16} />{/if}
+				{t('acc.reportSubmit')}
+			</button>
 		</div>
 	</form>
 	{#if form?.reported}

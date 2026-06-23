@@ -64,7 +64,7 @@
 			<div class="flex gap-2">
 				{#if data.otherKvks.length > 0}
 					<button class="text-xs text-rok-accent hover:underline" onclick={() => (showCopy = !showCopy)}>
-						{showCopy ? '✕ Đóng' : '📋 Copy từ KvK khác'}
+						{showCopy ? t('kvks2.close') : t('kvks2.copyFrom')}
 					</button>
 				{/if}
 			</div>
@@ -92,7 +92,7 @@
 					{/each}
 				</select>
 				<button type="submit" class="btn-secondary text-xs" disabled={changingFormula}>
-					{changingFormula ? '...' : 'Đổi formula'}
+					{changingFormula ? '...' : t('kvks2.changeFormula')}
 				</button>
 			</div>
 		</form>
@@ -114,7 +114,7 @@
 			<div class="bg-rok-surface rounded-lg p-3 mb-4">
 				<form method="POST" action="?/copyFormula" use:enhance class="flex items-end gap-2">
 					<div class="flex-1">
-						<label for="fromKvkId" class="text-xs text-rok-muted block mb-1">Copy formula + config từ KvK:</label>
+						<label for="fromKvkId" class="text-xs text-rok-muted block mb-1">{t('kvks2.copyLabel')}</label>
 						<select name="fromKvkId" id="fromKvkId" class="input w-full">
 							{#each data.otherKvks as kvk}
 								<option value={kvk.id}>{kvk.name}</option>
@@ -129,12 +129,12 @@
 		<!-- Status messages -->
 		{#if form?.formulaChanged}
 			<div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2 mb-3">
-				Đã đổi formula! Recalculate: {form.count} players.
+				{t('kvks2.formulaChanged', { count: form.count })}
 			</div>
 		{/if}
 		{#if form?.formulaCopied}
 			<div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2 mb-3">
-				Đã copy formula! Recalculate: {form.count} players.
+				{t('kvks2.formulaCopied', { count: form.count })}
 			</div>
 		{/if}
 	</div>
@@ -142,15 +142,15 @@
 	<!-- Formula Parameters -->
 	<div class="card">
 		<div class="flex items-center justify-between mb-3">
-			<h2 class="text-sm font-medium text-rok-muted">Tham số Formula</h2>
+			<h2 class="text-sm font-medium text-rok-muted">{t('kvks2.params')}</h2>
 			<form method="POST" action="?/resetDefaults" use:enhance class="inline">
-				<button type="submit" class="text-xs text-rok-red hover:underline">↺ Reset mặc định</button>
+				<button type="submit" class="text-xs text-rok-red hover:underline">{t('kvks2.reset')}</button>
 			</form>
 		</div>
 
 		{#if form?.paramSaved || form?.configReset}
 			<div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2 mb-3">
-				Đã lưu! Recalculate: {form.count} players.
+				{t('kvks2.paramSaved', { count: form.count })}
 			</div>
 		{/if}
 
@@ -191,7 +191,7 @@
 							/>
 						{/if}
 						<button type="submit" class="btn-secondary text-xs px-2 py-1" disabled={savingKey === field.key}>
-							{savingKey === field.key ? '...' : 'Lưu'}
+							{savingKey === field.key ? '...' : t('c.save')}
 						</button>
 					</div>
 				</form>
@@ -209,7 +209,7 @@
 					<input type="hidden" name="key" value="farm_contribution_pct" />
 					<div class="flex items-center gap-2">
 						<div class="flex-1 min-w-0">
-							<label for="param_farm" class="text-sm text-rok-text block truncate" title="% điểm farm chuyển cho main">
+							<label for="param_farm" class="text-sm text-rok-text block truncate" title={t('kvks2.farmTitle')}>
 								{farmPctField.label}
 							</label>
 						</div>
@@ -224,7 +224,7 @@
 							class="input w-28 text-right"
 						/>
 						<button type="submit" class="btn-secondary text-xs px-2 py-1" disabled={savingKey === 'farm_contribution_pct'}>
-							{savingKey === 'farm_contribution_pct' ? '...' : 'Lưu'}
+							{savingKey === 'farm_contribution_pct' ? '...' : t('c.save')}
 						</button>
 					</div>
 				</form>
@@ -235,7 +235,7 @@
 	<!-- Scores Table -->
 	{#if !data.activeVersion}
 		<div class="card text-center py-6 text-rok-muted text-sm">
-			KvK này chưa có active version. <a href="/admin/kvks/{data.kvk.slug}/versions" class="text-rok-accent underline">Activate version</a>
+			{t('kvks2.noActiveText')} <a href="/admin/kvks/{data.kvk.slug}/versions" class="text-rok-accent underline">{t('kvks2.activateVersion')}</a>
 		</div>
 	{:else}
 		<div class="card">
@@ -250,7 +250,7 @@
 			{/if}
 			{#if form?.success}
 				<div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2 mb-3">
-					Đã tính xong {form.count} players!
+					{t('kvks2.calcDone', { count: form.count })}
 				</div>
 			{/if}
 
@@ -262,7 +262,7 @@
 				};
 			}}>
 				<button type="submit" class="btn-primary" disabled={calculating}>
-					{calculating ? 'Đang tính...' : data.scores.length > 0 ? '↻ Tính lại' : '⚡ Tính điểm'}
+					{calculating ? t('kvks2.calculating') : data.scores.length > 0 ? t('kvks2.recalc') : t('kvks2.calc')}
 				</button>
 			</form>
 		</div>
@@ -273,7 +273,7 @@
 					<thead class="sticky top-0 bg-rok-bg z-10">
 						<tr class="border-b border-rok-border">
 							<th class="py-2 px-2 text-left text-rok-muted">#</th>
-							<th class="py-2 px-2 text-left text-rok-muted">Tên</th>
+							<th class="py-2 px-2 text-left text-rok-muted">{t('c.name')}</th>
 							<th class="py-2 px-2 text-right text-rok-muted">DKP Base</th>
 							<th class="py-2 px-2 text-right text-rok-muted">Bonus</th>
 							<th class="py-2 px-2 text-right text-rok-muted">DKP Raw</th>

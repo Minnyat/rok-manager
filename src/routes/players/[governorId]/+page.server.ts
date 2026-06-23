@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 		return { governorId, governorName: null, kvkHistory: [], summary: null };
 	}
 
-	const kvks = await getKvks(db);
+	const kvks = await getKvks(db, locals.user.kingdomId);
 	const kvkHistory: {
 		kvkId: number;
 		kvkName: string;

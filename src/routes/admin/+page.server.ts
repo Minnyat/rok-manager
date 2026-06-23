@@ -1,7 +1,12 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getDb } from '$lib/server/db';
 
-export const load: PageServerLoad = async ({ platform }) => {
+export const load: PageServerLoad = async ({ platform, locals }) => {
+	// The global dashboard is system-admin only — it aggregates data across all
+	// kingdoms. Kings/R4 land on their own kingdom's members page.
+	if (locals.user?.role !== 'admin') throw redirect(303, '/admin/members');
+
 	const db = getDb(platform);
 
 	const userCount = await db.prepare('SELECT COUNT(*) as count FROM users WHERE is_active = 1').first<{ count: number }>();
