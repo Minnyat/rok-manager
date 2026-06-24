@@ -98,15 +98,16 @@
 <div class="max-w-3xl mx-auto space-y-5">
 	<h1 class="text-xl font-bold">{auction?.title ?? t('auction.title')}</h1>
 
+	<!-- Rules (collapsible, follows current language) — always visible, even when
+	     there is no active auction so players can read the rules anytime. -->
+	<details class="card text-sm text-rok-text">
+		<summary class="cursor-pointer text-rok-accent">{t('auction.rules.title')}</summary>
+		<div class="mt-2 whitespace-pre-line text-rok-dim text-xs leading-relaxed">{t('auction.rules.body')}</div>
+	</details>
+
 	{#if !liveView}
 		<div class="card text-center py-8 text-rok-muted text-sm">{t('auction.none')}</div>
 	{:else}
-		<!-- Rules (collapsible, follows current language) -->
-		<details class="card text-sm text-rok-text">
-			<summary class="cursor-pointer text-rok-accent">{t('auction.rules.title')}</summary>
-			<div class="mt-2 whitespace-pre-line text-rok-dim text-xs leading-relaxed">{t('auction.rules.body')}</div>
-		</details>
-
 		<!-- Wallet + status -->
 		<div class="card flex items-center justify-between flex-wrap gap-3">
 			<div>
