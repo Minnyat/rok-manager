@@ -39,7 +39,7 @@
 		debounceTimer = setTimeout(async () => {
 			try {
 				const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`);
-				const data = await res.json();
+				const data = await res.json() as { results?: any[] };
 				suggestions = data.results || [];
 				showSuggestions = suggestions.length > 0;
 			} catch {

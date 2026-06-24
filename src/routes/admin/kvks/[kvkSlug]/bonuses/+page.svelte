@@ -30,7 +30,7 @@
 		if (searchQuery.length < 2) { searchResults = []; return; }
 		searching = true;
 		try {
-			const res = await fetch(`/api/search-governor?q=${encodeURIComponent(searchQuery)}`);
+			const res = await fetch(`/api/search-governor?q=${encodeURIComponent(searchQuery)}&kvkId=${data.kvk.id}`);
 			searchResults = await res.json();
 		} catch { searchResults = []; }
 		searching = false;

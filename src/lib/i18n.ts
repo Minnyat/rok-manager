@@ -322,6 +322,10 @@ const translations: Record<string, Record<string, string>> = {
 		"kvko.description": "Mô tả",
 		"kvko.importNew": "+ Import mới",
 		"kvko.noVersions": "Chưa có version nào. Import CSV để bắt đầu.",
+		"kvko.renameTitle": "Đổi tên KvK",
+		"kvko.nameLabel": "Tên KvK",
+		"kvko.renameSaved": "Đã đổi tên KvK thành công.",
+		"kvko.errName": "Tên KvK không được để trống (tối đa 100 ký tự).",
 
 		// KvK bonuses
 		"kvkb.title": "Bonus Recipients",
@@ -914,6 +918,10 @@ const translations: Record<string, Record<string, string>> = {
 		"kvko.description": "Description",
 		"kvko.importNew": "+ New import",
 		"kvko.noVersions": "No versions yet. Import CSV to start.",
+		"kvko.renameTitle": "Rename KvK",
+		"kvko.nameLabel": "KvK name",
+		"kvko.renameSaved": "KvK renamed successfully.",
+		"kvko.errName": "KvK name cannot be empty (max 100 characters).",
 
 		"kvkb.title": "Bonus Recipients",
 		"kvkb.close": "✕ Close",

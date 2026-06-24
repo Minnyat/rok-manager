@@ -4,7 +4,14 @@ import { getDb } from "$lib/server/db";
 import { getSelectedKvk, getActiveVersionForKvk } from "$lib/server/kvk";
 
 export const GET: RequestHandler = async ({ url, platform, locals }) => {
-	if (!locals.user || locals.user.role === "player") {
+	// Privileged search: system admin OR a kingdom manager (King / R4). Note a
+	// King/R4's *system* role is usually "player" — their elevated access comes
+	// from kingdomRole, so we must NOT gate on user.role alone.
+	const u = locals.user;
+	if (!u) return json([]);
+	const isManager =
+		u.role === "admin" || u.kingdomRole === "king" || u.kingdomRole === "r4";
+	if (!isManager) {
 		return json([]);
 	}
 
@@ -25,7 +32,7 @@ export const GET: RequestHandler = async ({ url, platform, locals }) => {
 	}
 
 	if (!activeVersion) {
-		const kvk = await getSelectedKvk(db, url, locals.user.kingdomId);
+		const kvk = await getSelectedKvk(db, url, u.kingdomId);
 		if (kvk) {
 			activeVersion = await getActiveVersionForKvk(db, kvk.id);
 		}

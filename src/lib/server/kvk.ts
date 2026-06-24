@@ -167,13 +167,28 @@ export async function createKvk(
 }
 
 /**
- * Update KvK fields (name, description, status, formula_type, formula_params).
+ * Turn a human KvK name into a URL slug. Strips Vietnamese diacritics and any
+ * non-alphanumeric characters. Returns "" when nothing usable remains (e.g. a
+ * fully non-latin name) — callers should fall back to an id-based slug.
+ */
+export function slugify(name: string): string {
+	return name
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[̀-ͯ]/g, "")
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");
+}
+
+/**
+ * Update KvK fields (name, slug, description, status, formula_type, formula_params).
  */
 export async function updateKvk(
 	db: D1Database,
 	kvkId: number,
 	fields: {
 		name?: string;
+		slug?: string;
 		description?: string;
 		status?: string;
 		formula_type?: string;
@@ -186,6 +201,10 @@ export async function updateKvk(
 	if (fields.name !== undefined) {
 		sets.push("name = ?");
 		values.push(fields.name);
+	}
+	if (fields.slug !== undefined) {
+		sets.push("slug = ?");
+		values.push(fields.slug);
 	}
 	if (fields.description !== undefined) {
 		sets.push("description = ?");

@@ -20,6 +20,8 @@
 
 	let confirmClose = $state(false);
 	let busy = $state(false);
+	let editingName = $state(false);
+	let savingName = $state(false);
 
 	function formatDate(ts: number | null) {
 		if (!ts) return '-';
@@ -43,6 +45,52 @@
 			{t('kvko.closedMsg', { granted: formatNumber(form.granted), members: form.members, keep: form.keepPct })}
 		</div>
 	{/if}
+	{#if form?.renamed}
+		<div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2">
+			{t('kvko.renameSaved')}
+		</div>
+	{/if}
+
+	<!-- KvK name (editable by King / R4 / admin) -->
+	<div class="card">
+		{#if !editingName}
+			<div class="flex items-center justify-between gap-2">
+				<div>
+					<h2 class="text-lg font-bold text-rok-text">{data.kvk.name}</h2>
+					<div class="text-xs text-rok-dim mt-0.5">/{data.kvk.slug}</div>
+				</div>
+				<button class="text-xs text-rok-accent hover:underline shrink-0" onclick={() => (editingName = true)}>
+					{t('c.edit')}
+				</button>
+			</div>
+		{:else}
+			<h2 class="text-sm font-medium text-rok-muted mb-2">{t('kvko.renameTitle')}</h2>
+			<form method="POST" action="?/rename" use:enhance={() => {
+				savingName = true;
+				return async ({ update }) => {
+					savingName = false;
+					editingName = false;
+					await update();
+				};
+			}} class="flex items-center gap-2 flex-wrap">
+				<input
+					name="name"
+					type="text"
+					value={data.kvk.name}
+					maxlength="100"
+					required
+					aria-label={t('kvko.nameLabel')}
+					class="input flex-1 min-w-[160px]"
+				/>
+				<button type="submit" class="btn-primary text-sm inline-flex items-center gap-1.5" disabled={savingName}>
+					{#if savingName}<Spinner size={16} />{/if}{t('c.save')}
+				</button>
+				<button type="button" class="btn-ghost text-sm" onclick={() => (editingName = false)} disabled={savingName}>
+					{t('c.cancel')}
+				</button>
+			</form>
+		{/if}
+	</div>
 
 	<!-- Stats cards -->
 	<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">

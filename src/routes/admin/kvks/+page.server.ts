@@ -1,7 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getDb } from "$lib/server/db";
-import { getKvks, createKvk, getKvkStats } from "$lib/server/kvk";
+import { getKvks, createKvk, getKvkStats, slugify } from "$lib/server/kvk";
 import { seedScoringConfigForKvk } from "$lib/server/scoring-config";
 import { t } from "$lib/i18n";
 
@@ -28,12 +28,7 @@ export const actions: Actions = {
 		if (!name) return fail(400, { error: t(locals.lang, "err.kvkNameEmpty") });
 
 		// Generate slug from name
-		const slug = name
-			.toLowerCase()
-			.normalize("NFD")
-			.replace(/[\u0300-\u036f]/g, "")
-			.replace(/[^a-z0-9]+/g, "-")
-			.replace(/^-|-$/g, "");
+		const slug = slugify(name);
 
 		const db = getDb(platform);
 
