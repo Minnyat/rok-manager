@@ -117,18 +117,34 @@ export const auctionVi: Record<string, string> = {
 	"auction.reveal.title": "Kết quả công khai",
 	"auction.rules.title": "Luật đấu giá",
 	"auction.rules.body":
-		"1. Tích & cộng dồn: Bạn tích DKP qua KvK; xu chưa dùng được cộng dồn sang kỳ sau.\n" +
-		"2. Quy đổi: King/R4 chốt quy đổi DKP → xu một lần duy nhất mỗi KvK (1:1).\n" +
-		"3. Ra giá: Bạn ra đơn giá (xu mỗi trọc). Tổng phải trả = đơn giá × số trọc của rank.\n" +
-		"4. Mỗi người nhận tối đa 1 vị trí; chỉ được tăng giá, không được giảm; không vượt quá số dư.\n" +
-		"5. Xếp hạng: đơn giá cao hơn xếp trên. Hòa giá: ưu tiên DKP cao hơn, rồi ra giá sớm hơn.\n" +
-		"6. Giá thực trả: rank i trả bằng giá rank i+1 + 1 bước; rank cuối không có người dưới trả giá sàn. Bạn không bao giờ trả quá giá mình đặt.\n" +
-		"7. Ẩn danh khi đấu: chỉ thấy giá ở từng rank; danh tính + toàn bộ giá công khai sau khi đóng phiên.\n" +
-		"8. Gia hạn phút chót: có người vượt lên ở phút cuối thì giờ đóng lùi thêm.\n" +
-		"9. Chốt: King/R4 chốt → trừ xu, lưu vị trí.\n" +
-		"10. Hủy & hoàn: nếu kingdom không giữ được vị trí, King/R4 hủy và hoàn toàn bộ xu, kèm lý do (công khai).\n" +
-		"11. Điều chỉnh: nâng rank trừ thêm xu; hạ rank hoàn lại phần chênh lệch.\n" +
-		"12. Mọi thời gian theo UTC.",
+		"Tóm tắt: Bạn dùng XU (đổi từ DKP) để giành 1 suất rank MGE (1–15). Gõ giá càng cao, rank càng tốt, càng nhiều trọc. Yên tâm 2 điều: chỉ mất xu KHI TRÚNG, và không bao giờ trả nhiều hơn mức bạn gõ.\n" +
+		"\n" +
+		"— XU CỦA BẠN —\n" +
+		"1. Bạn tích DKP qua mỗi KvK. King/R4 đổi DKP → xu, 1 lần duy nhất mỗi KvK (mặc định 1:1).\n" +
+		"2. Xu chưa dùng được cộng dồn sang kỳ sau.\n" +
+		"\n" +
+		"— CÁCH RA GIÁ —\n" +
+		"3. Bạn gõ ĐƠN GIÁ = số xu cho mỗi trọc. Bạn KHÔNG chọn rank trực tiếp — hệ thống tự xếp theo đơn giá: gõ càng cao, rank càng tốt.\n" +
+		"4. Mỗi người chỉ giữ 1 suất. Đã ra giá thì CHỈ ĐƯỢC TĂNG, không được giảm, và không vượt quá số dư xu.\n" +
+		"   (Vì sao chỉ tăng: rank cao hơn tốn nhiều xu hơn, nên hệ thống kiểm tra đủ tiền ngay lúc bạn nâng. Bị người khác đẩy tụt xuống thì luôn rẻ hơn — bạn không bao giờ kẹt tiền.)\n" +
+		"\n" +
+		"— BẠN TRẢ BAO NHIÊU —\n" +
+		"5. Xếp hạng: đơn giá cao hơn xếp trên. Bằng nhau: ưu tiên DKP cao hơn, rồi ai gõ sớm hơn.\n" +
+		"6. Bạn trả theo giá của NGƯỜI NGAY DƯỚI bạn (+1 bước), KHÔNG phải giá bạn gõ. Người chót, không còn ai dưới, thì trả giá sàn.\n" +
+		"   Ví dụ: bạn gõ 10, người dưới bạn gõ 7 → bạn chỉ trả đơn giá 8. Cứ gõ đúng mức tối đa thật lòng, không sợ trả hớ.\n" +
+		"7. Tổng xu phải trả = đơn giá thực trả × số trọc của rank. Rank càng cao càng nhiều trọc, nên càng đắt.\n" +
+		"8. Xếp từ hạng 16 trở đi: không nhận suất, không mất xu.\n" +
+		"\n" +
+		"— AN TÂM & MINH BẠCH —\n" +
+		"9. Trong lúc đấu là ẨN DANH: bạn chỉ thấy giá ở từng rank, không thấy ai là ai hay ai có bao nhiêu xu. Đóng phiên xong mới công khai danh tính + toàn bộ giá để ai cũng kiểm chứng được.\n" +
+		"10. Gia hạn phút chót: có người vượt lên ở những phút cuối thì giờ đóng tự lùi thêm — bạn luôn có cơ hội đáp trả, không sợ bị canh giây cuối.\n" +
+		"\n" +
+		"— SAU KHI ĐÓNG (King/R4 làm) —\n" +
+		"11. Chốt: trừ xu người trúng và lưu vị trí. Người không trúng được nhả lại toàn bộ xu giữ tạm.\n" +
+		"12. Hủy & hoàn: nếu kingdom không giữ được suất, hoàn lại TOÀN BỘ xu kèm lý do công khai.\n" +
+		"13. Điều chỉnh: nâng rank trừ thêm xu, hạ rank hoàn lại phần chênh.\n" +
+		"\n" +
+		"Mọi thời gian tính theo giờ UTC.",
 
 	"auction.liveUpdated": "Cập nhật lúc {time}",
 	"auction.refresh": "Làm mới",
@@ -269,18 +285,34 @@ export const auctionEn: Record<string, string> = {
 	"auction.reveal.title": "Public results",
 	"auction.rules.title": "Auction rules",
 	"auction.rules.body":
-		"1. Earning & carryover: You accrue DKP across KvK; unused coins carry over to the next period.\n" +
-		"2. Conversion: King/R4 finalizes the DKP → coin conversion once per KvK (1:1).\n" +
-		"3. Bidding: You bid a unit price (coins per sculpture). Total cost = unit price × the rank's sculptures.\n" +
-		"4. Each player wins at most one position; you may only raise your bid, never lower; never exceed your balance.\n" +
-		"5. Ranking: higher unit price ranks higher. Ties: higher DKP first, then earlier bid time.\n" +
-		"6. Price paid: rank i pays rank i+1's bid + one increment; the lowest filled rank with no one below pays the reserve. You never pay more than your own bid.\n" +
-		"7. Anonymous while live: you only see the price at each rank; identities and all bids are revealed after close.\n" +
-		"8. Soft-close: a lead change in the final minutes extends the close time.\n" +
-		"9. Settlement: King/R4 settles → coins deducted, positions recorded.\n" +
-		"10. Cancel & refund: if the kingdom cannot secure a position, King/R4 cancels and fully refunds the coins, with a stated reason (public).\n" +
-		"11. Adjustment: moving up costs extra coins; moving down refunds the difference.\n" +
-		"12. All times are in UTC.",
+		"In short: You spend COINS (converted from DKP) to win one MGE rank (1–15). The higher you bid, the better the rank and the more sculptures. Two guarantees: you only lose coins IF YOU WIN, and you never pay more than the price you typed.\n" +
+		"\n" +
+		"— YOUR COINS —\n" +
+		"1. You accrue DKP each KvK. King/R4 converts DKP → coins once per KvK (1:1 by default).\n" +
+		"2. Unused coins carry over to the next period.\n" +
+		"\n" +
+		"— HOW TO BID —\n" +
+		"3. You type a UNIT PRICE = coins per sculpture. You do NOT pick a rank directly — the system ranks you by unit price: bid higher, get a better rank.\n" +
+		"4. Each player holds one slot only. Once you bid you may ONLY RAISE, never lower, and never exceed your balance.\n" +
+		"   (Why raise-only: a higher rank costs more coins, so the system checks you can afford it the moment you raise. Being pushed down always gets cheaper — you can never get stuck unable to pay.)\n" +
+		"\n" +
+		"— WHAT YOU PAY —\n" +
+		"5. Ranking: higher unit price ranks higher. Ties: higher DKP first, then whoever bid earlier.\n" +
+		"6. You pay the price of the PERSON JUST BELOW you (+1 increment), NOT the price you typed. The last person, with no one below, pays the reserve price.\n" +
+		"   Example: you type 10, the person below you typed 7 → you only pay a unit price of 8. Bid your true maximum without fear of overpaying.\n" +
+		"7. Total coins due = actual unit price × the rank's sculptures. Higher ranks have more sculptures, so they cost more.\n" +
+		"8. Ranked 16th or lower: no slot, no coins lost.\n" +
+		"\n" +
+		"— FAIRNESS & TRANSPARENCY —\n" +
+		"9. The auction is ANONYMOUS while live: you only see the price at each rank, never who anyone is or how many coins they hold. After close, identities and all bids are made public so anyone can verify.\n" +
+		"10. Anti-snipe: if someone overtakes in the final minutes, the close time extends automatically — you always get a chance to respond, no last-second sniping.\n" +
+		"\n" +
+		"— AFTER CLOSE (done by King/R4) —\n" +
+		"11. Settle: winners' coins are deducted and positions recorded. Non-winners get all their held coins released.\n" +
+		"12. Cancel & refund: if the kingdom cannot secure a slot, ALL coins are refunded with a public reason.\n" +
+		"13. Adjustment: moving up deducts extra coins, moving down refunds the difference.\n" +
+		"\n" +
+		"All times are in UTC.",
 
 	"auction.liveUpdated": "Updated at {time}",
 	"auction.refresh": "Refresh",
